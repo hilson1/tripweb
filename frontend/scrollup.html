@@ -1,0 +1,20 @@
+<div class="scroll-up" id="scrollUpButton" onclick="scrollToTop()">
+    <i class="fas fa-chevron-up"></i>
+</div>
+<script>
+    window.onscroll = function () {
+        var scrollUpButton = document.getElementById("scrollUpButton");
+        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+            scrollUpButton.style.display = "flex";
+        } else {
+            scrollUpButton.style.display = "none";
+        }
+    };
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+</script>

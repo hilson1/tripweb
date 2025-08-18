@@ -1,0 +1,81 @@
+user attributes
+userid,
+phone number,
+address,
+zip/postal code,
+country,
+first name,last name, 
+email,
+password,
+profilepic
+
+CREATE TABLE users (
+    userid VARCHAR(50) PRIMARY KEY,         -- Unique user ID, manually assigned
+    phone_number VARCHAR(20),      -- Phone number as a string
+    address VARCHAR(255),                   -- Address
+    zip_postal_code VARCHAR(20),            -- Zip or postal code
+    country VARCHAR(50),                    -- Country
+    first_name VARCHAR(50),		        -- First name (required)
+    last_name VARCHAR(50),
+    user_name VARCHAR(50),			-- Last name (required)
+    email VARCHAR(100) UNIQUE NOT NULL,     -- Unique email (required)
+    password VARCHAR(255) NOT NULL,         -- Hashed password
+    profilepic VARCHAR(255)                 -- Profile picture file path
+);
+
+
+table for trip.
+CREATE TABLE trips (
+    tripid INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    transportation VARCHAR(100),
+    accomodation VARCHAR(100),
+    maximumaltitude VARCHAR(20),
+    departurefrom VARCHAR(50),
+    bestseason VARCHAR(50),
+    tourtype VARCHAR(50),
+    meals VARCHAR(100),
+    language VARCHAR(50),
+    fitnesslevel VARCHAR(30),
+    groupsize INT,
+    minimumage INT,
+    maximumage INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+table for trip information
+
+overviewid,
+tripid,
+overview, 
+highlit1,
+highlite2,
+highlite3,
+highlite4,
+highlite5,
+highlite6,
+highlite7
+
+
+
+
+table for trip itinerary
+CREATE TABLE itinerary (
+    itinerary_id INT AUTO_INCREMENT PRIMARY KEY,
+    tripid INT NOT NULL,
+    day_number INT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    -- [other fields as above]
+    FOREIGN KEY (tripid) REFERENCES trips(tripid) ON DELETE CASCADE,
+    UNIQUE KEY (tripid, day_number)
+);
+
+CREATE TABLE trip_images (
+    image_id INT AUTO_INCREMENT PRIMARY KEY,
+    tripid INT NOT NULL,
+    path VARCHAR(100) NOT NULL,
+    FOREIGN KEY (tripid) REFERENCES trips(tripid) ON DELETE CASCADE,
+);
