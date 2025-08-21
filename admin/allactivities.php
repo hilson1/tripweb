@@ -2,7 +2,7 @@
 require '../connection.php';
  
 // Get fresh data for display
-$stmt = $conn->prepare("SELECT * FROM activity ORDER BY activity_id DESC");
+$stmt = $conn->prepare("SELECT * FROM activities");
 $stmt->execute();
 $result = $stmt->get_result();
 ?>

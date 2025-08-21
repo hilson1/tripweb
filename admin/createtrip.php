@@ -1,19 +1,28 @@
 <?php
 require 'frontend/connection.php'; // Reuse your DB connection file
 
-$tripTypesQuery = "SELECT triptype_id, triptype, description FROM triptypes";
+// Fetch trip types
+$tripTypesQuery = "SELECT triptype FROM triptypes";
 $tripTypesResult = $conn->query($tripTypesQuery);
+
+// Fetch locations
+$locationsQuery = "SELECT distination FROM destinations";
+$locationsResult = $conn->query($locationsQuery);
+
+// Fetch activities
+$activitiesQuery = "SELECT activity FROM activities";
+$activitiesResult = $conn->query($activitiesQuery);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
     $price = floatval($_POST['price']);
     $transportation = trim($_POST['Transportation']);
-    $Accomodation = trim($_POST['Accomodation']);
-    $Maximum = intval($_POST['Maximum']);
-    $departure = trim($_POST['Departure']); // Fixed variable name
+    $accomodation = trim($_POST['Accomodation']);
+    $maximumaltitude = trim($_POST['Maximum']); // varchar now
+    $departure = trim($_POST['Departure']);
     $season = trim($_POST['season']);
-    $triptype_id = intval($_POST['triptype_id']);
+    $triptype = trim($_POST['triptype']); // use name directly
     $meals = trim($_POST['meals']);
     $language = trim($_POST['language']);
     $fitnesslevel = trim($_POST['fitnesslevel']);
@@ -21,48 +30,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $minimumage = intval($_POST['minimumage']);
     $maximumage = intval($_POST['maximumage']);
     $location = trim($_POST['location']);
-    $duration = trim($_POST['duration']); // Added duration field
-
-    // Get trip type name
-    $tripTypeQuery = "SELECT triptype FROM triptypes WHERE triptype_id = ?";
-    $stmt = $conn->prepare($tripTypeQuery);
-    $stmt->bind_param("i", $triptype_id);
-    $stmt->execute();
-    $tripTypeResult = $stmt->get_result();
-    $triptype_name = '';
-    if ($tripTypeResult && $tripTypeResult->num_rows > 0) {
-        $triptype_name = $tripTypeResult->fetch_assoc()['triptype']; // Fixed column name
-    }
+    $activity = trim($_POST['activity']); // added
+    $duration = trim($_POST['duration']);
 
     $sql = "INSERT INTO trips (
-        title, price, description, transportation, accomodation, maximumaltitude, 
-        departurefrom, bestseason, triptype_id, triptype, meals, language, 
-        fitnesslevel, groupsize, minimumage, maximumage, location, duration
+        title, price, transportation, accomodation, maximumaltitude, 
+        departurefrom, bestseason, triptype, meals, language, fitnesslevel, 
+        groupsize, minimumage, maximumage, description, location, duration, activity
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->bind_param(
-        "sdsssississsssiiss", // Corrected parameter types: 17 characters for 17 variables
-        $title,          // s - string
-        $price,          // d - double/float
-        $description,   // s - string
-        $transportation, // s - string
-        $Accomodation,   // s - string
-        $Maximum,        // i - integer
-        $departure,      // s - string
-        $season,         // s - string
-        $triptype_id,    // i - integer
-        $triptype_name,  // s - string
-        $meals,          // s - string
-        $language,       // s - string
-        $fitnesslevel,   // s - string
-        $groupsize,      // s - string
-        $minimumage,     // i - integer
-        $maximumage,     // i - integer
-        $location ,      // s - string
-        $duration
+        "sdssssssssssiissss",
+        $title,
+        $price,
+        $transportation,
+        $accomodation,
+        $maximumaltitude,
+        $departure,
+        $season,
+        $triptype,
+        $meals,
+        $language,
+        $fitnesslevel,
+        $groupsize,
+        $minimumage,
+        $maximumage,
+        $description,
+        $location,
+        $duration,
+        $activity
     );
-    
+
     if ($stmt->execute()) {
         echo "<script>alert('Trip created successfully!');</script>";
     } else {
@@ -70,6 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $stmt->close();
 }
+$conn->close(); 
 ?>
 
 <!DOCTYPE html>
@@ -81,32 +81,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="frontend/sidebar.css">
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('click', function (event) {
-                document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                    if (!menu.parentElement.contains(event.target)) {
-                        menu.classList.add('hidden');
-                    }
-                });
-            });
-            document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function (event) {
-                    event.stopPropagation();
-                    const dropdownMenu = this.nextElementSibling;
-                    dropdownMenu.classList.toggle('hidden');
-                });
-            });
-        });
-    </script>
 </head>
 
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+<body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
     <div class="flex h-screen">
+      <div class="overlay" :class="{ 'open': sidebarOpen }" @click="sidebarOpen = false"></div>
+        <!-- Header -->
+        <?php include 'frontend/header.php'; ?>
         <!-- Sidebar -->
         <?php
-        include("frontend/asidebar.php");
+        include("frontend/sidebar.php");
         ?>
         <!-- Main Content -->
         <div class="ml-64 p-6 w-full mt-16">
@@ -172,19 +158,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div class="mt-8">
                         <label for="triptype" class="block text-sm font-medium text-gray-700 mb-2">Trip Type</label>
-                        <select id="triptype" name="triptype_id" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select id="triptype" name="triptype" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="" disabled selected>Select Trip Type</option>
                             <?php if ($tripTypesResult && $tripTypesResult->num_rows > 0): ?>
-                                <?php while ($tripType = $tripTypesResult->fetch_assoc()): ?>
-                                    <option value="<?php echo $tripType['triptype_id']; ?>" title="<?php echo htmlspecialchars($tripType['description']); ?>">
-                                        <?php echo htmlspecialchars($tripType['triptype']); ?>
+                                <?php while ($row = $tripTypesResult->fetch_assoc()): ?>
+                                    <option value="<?php echo htmlspecialchars($row['triptype']); ?>">
+                                        <?php echo htmlspecialchars($row['triptype']); ?>
                                     </option>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <option value="" disabled>No trip types available</option>
                             <?php endif; ?>
                         </select>
-                        <p class="text-xs text-gray-500 mt-1">Hover over options to see descriptions</p>
                     </div>
                     <div class="mt-7">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Meals:</label>
@@ -229,9 +215,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             class="w-full p-2 border border-gray-300 rounded" required>
                     </div>
                     <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Location: </label>
-                        <input type="text" id="location" name="location"
-                            class="w-full p-2 border border-gray-300 rounded" required>
+                        <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location:</label>
+                        <select id="location" name="location" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="" disabled selected>Select Location</option>
+                            <?php if ($locationsResult && $locationsResult->num_rows > 0): ?>
+                                <?php while ($row = $locationsResult->fetch_assoc()): ?>
+                                    <option value="<?php echo htmlspecialchars($row['distination']); ?>">
+                                        <?php echo htmlspecialchars($row['distination']); ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <option value="" disabled>No locations available</option>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                    <div class="mt-6">
+                        <label for="activity" class="block text-sm font-medium text-gray-700 mb-1">Activity:</label>
+                        <select id="activity" name="activity" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="" disabled selected>Select Activity</option>
+                            <?php if ($activitiesResult && $activitiesResult->num_rows > 0): ?>
+                                <?php while ($row = $activitiesResult->fetch_assoc()): ?>
+                                    <option value="<?php echo htmlspecialchars($row['activity']); ?>">
+                                        <?php echo htmlspecialchars($row['activity']); ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <option value="" disabled>No activities available</option>
+                            <?php endif; ?>
+                        </select>
                     </div>
                     <div class="mt-6">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Duration:</label>
@@ -240,17 +253,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div class="mt-6">
                         <!-- Submit Button -->
-                        <div class="md:col-span-2 mt-4 flex justify-end space-x-4">
-                            <button type="submit" class="bg-[#008080] text-white px-4 py-2 rounded">Create</button>
-                            <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                        <div class="flex justify-end space-x-4 mt-8">
+                            <button type="button" class="btn-secondary" onclick="window.location.href='alltrip.php'">Cancel</button>
+                            <button type="submit" class="btn-primary">Create Trip</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- Alpine JS for dropdown functionality -->   
     <script>
+        // Initialize sidebar state
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('sidebar', () => ({
+                sidebarOpen: false,
+                toggleSidebar() {
+                    this.sidebarOpen = !this.sidebarOpen;
+                }
+            }));
+        });
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.querySelector("form");
 
@@ -274,6 +297,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 const location = document.getElementById("location").value.trim();
                 cosnt duration = document.getElementById("duration").value.trim();
 
+
                 // Select field validations
                 const transportation = document.getElementById("Transportation").value;
                 const departure = document.getElementById("Departure").value;
@@ -281,6 +305,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 const tripType = document.getElementById("triptype").value;
                 const fitnessLevel = document.getElementById("fitnesslevel").value;
                 const groupSize = document.getElementById("groupsize").value;
+                const activity = document.getElementById("activity").value;
 
                 if (title === "") {
                     isValid = false;
@@ -370,6 +395,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if (duration === "") {
                     isValid = false;
                     errorMsg += "Duration is required.\n";
+                }
+
+                if (activity === "") {
+                    isValid = false;
+                    errorMsg += "Please select an activity.\n";
                 }
 
                 if (!isValid) {

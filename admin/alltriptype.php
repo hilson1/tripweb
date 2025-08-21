@@ -41,36 +41,33 @@ $result = $stmt->get_result();
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="frontend/sidebar.css">
+     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function (event) {
-                    event.preventDefault();
-
-                    // Close all dropdowns
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        if (menu !== this.nextElementSibling) {
-                            menu.classList.add('hidden');
+        
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('main', () => ({
+                    sidebarOpen: window.innerWidth >= 1024,
+                    
+                    init() {
+                    // Close sidebar on mobile by default
+                    if (window.innerWidth < 1024) {
+                        this.sidebarOpen = false;
+                    }
+                    
+                    // Update state when window is resized
+                    window.addEventListener('resize', () => {
+                        if (window.innerWidth >= 1024) {
+                        this.sidebarOpen = true;
                         }
                     });
-
-                    // Toggle current dropdown
-                    const dropdownMenu = this.nextElementSibling;
-                    dropdownMenu.classList.toggle('hidden');
+                    }
+                }));
                 });
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function (event) {
-                if (!event.target.closest('.dropdown-toggle')) {
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        menu.classList.add('hidden');
-                    });
-                }
-            });
+        
             // Search functionality
             const searchInput = document.getElementById('searchInput');
             const userTable = document.getElementById('userTable');
@@ -112,14 +109,16 @@ $result = $stmt->get_result();
 
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
     <div class="flex h-screen">
+        <!-- Header -->
+        <?php include("frontend/header.php"); ?>
         <!-- Sidebar -->
-        <?php include("frontend/asidebar.php"); ?>
+        <?php include("frontend/sidebar.php"); ?>
         
         <!-- main section -->
         <div class="ml-64 p-6 w-[84%] mx-auto mt-16">
             <div class="bg-white shadow-md rounded-lg p-6">
                 <div class="bg-gray-100 p-4 rounded-lg mb-6">
-                    <h2 class="text-3xl font-bold text-gray-800 mt-6 tracking-tighter">All TripType</h2>
+                    <h2 class="text-3xl font-bold text-gray-800 mt-6 tracking-tighter">All Trip Type</h2>
                     
                     <!-- Messages -->
                     <?php if (isset($_GET['delete']) && $_GET['delete'] == 'success'): ?>
