@@ -56,6 +56,7 @@ if ($stmt->execute()) {
     die("Error fetching trip: " . $conn->error);
 }
 
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -250,6 +251,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .delete-btn:hover {
             background: #dc2626;
         }
+        
+        .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+        
     </style>
 
 </head>
@@ -543,21 +554,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="image-upload-container w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200 relative group" 
                                 id="<?= $field ?>_container">
                             <?php if (!empty($trip[$field])): ?>
-                                <img src="<?= htmlspecialchars($trip[$field]) ?>" 
+                                   <img src="../<?= htmlspecialchars($trip[$field]) ?>" 
                                     class="w-full h-full object-cover rounded-lg" 
-                                    alt="<?= $field ?>">
-                                <button type="button" 
-                                        class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors duration-200 delete-existing-image" 
-                                        data-field="<?= $field ?>">
-                                    <i class="fas fa-times text-sm"></i>
-                                </button>
-                            <?php else: ?>
-                                <div class="flex flex-col items-center justify-center h-full">
-                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                                    <p class="text-sm text-gray-500">Click to upload image</p>
-                                    <p class="text-xs text-gray-400">JPG, PNG (MAX. 5MB)</p>
-                                </div>
-                                <input type="file" name="<?= $field ?>" class="hidden" accept="image/*">
+                                    alt="<?= $field ?>"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="upload-placeholder" style="display:none;">
+                                        <i class="fas fa-exclamation-triangle text-red-500 text-2xl mb-2"></i>
+                                        <p class="text-sm text-red-500">Image not found</p>
+                                        <p class="text-xs text-gray-400">Click to upload new</p>
+                                    </div>
+                                    <button type="button" 
+                                            class="delete-btn delete-existing-image" 
+                                            data-field="<?= $field ?>">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <input type="file" name="<?= $field ?>" class="hidden" accept="image/*">
+                                <?php else: ?>
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-500">Click to upload image</p>
+                                        <p class="text-xs text-gray-400">JPG, PNG (MAX. 5MB)</p>
+                                    </div>
+                                    <input type="file" name="<?= $field ?>" class="hidden" accept="image/*">
                             <?php endif; ?>
                             </div>
                         </div>
@@ -582,76 +600,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Alpine JS for dropdown functionality -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Reset image field function
-        window.resetImageField = function(fieldName) {
-            const container = document.getElementById(fieldName + '_container');
-            container.innerHTML = `
-                <div class="image-upload-icon">+</div>
-                <input type="file" name="${fieldName}" class="hidden" accept="image/*">
-            `;
-            handleImageUpload(container);
-        };
-
-        // Image Upload Handling
-        const handleImageUpload = (container) => {
-            const input = container.querySelector('input[type="file"]');
-            const deleteBtn = container.querySelector('.delete-existing-image');
-
-            if (input) {
-                container.addEventListener('click', (e) => {
-                    if (!e.target.closest('.delete-btn')) {
-                        input.click();
-                    }
-                });
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all image containers
+    document.querySelectorAll('.image-upload-container').forEach(container => {
+        const input = container.querySelector('input[type="file"]');
+        const deleteBtn = container.querySelector('.delete-existing-image');
+        
+        // Handle container click for file selection
+        container.addEventListener('click', function(e) {
+            if (!e.target.closest('.delete-btn') && input) {
+                input.click();
+            }
+        });
+        
+        // Handle file selection
+        if (input) {
+            input.addEventListener('change', function() {
+                if (this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        container.innerHTML = `
+                            <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg" alt="Preview">
+                            <button type="button" class="delete-btn" onclick="resetImageField('${this.name}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        
+        // Handle existing image deletion
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const field = this.dataset.field;
+                const deletedInput = document.getElementById('deleted_images');
+                const deleted = deletedInput.value ? deletedInput.value.split(',') : [];
                 
-                input.addEventListener('change', function() {
+                if (!deleted.includes(field)) {
+                    deleted.push(field);
+                    deletedInput.value = deleted.join(',');
+                }
+                
+                // Reset to upload state
+                container.innerHTML = `
+                    <div class="upload-placeholder">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-500">Click to upload image</p>
+                        <p class="text-xs text-gray-400">JPG, PNG (MAX. 5MB)</p>
+                    </div>
+                    <input type="file" name="${field}" class="hidden" accept="image/*">
+                `;
+                
+                // Re-initialize the container
+                const newInput = container.querySelector('input[type="file"]');
+                container.addEventListener('click', () => newInput.click());
+                newInput.addEventListener('change', function() {
                     if (this.files[0]) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             container.innerHTML = `
-                                <div class="image-preview" style="background-image: url('${e.target.result}')"></div>
+                                <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg" alt="Preview">
                                 <button type="button" class="delete-btn" onclick="resetImageField('${this.name}')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                     </svg>
+                                    <i class="fas fa-times"></i>
                                 </button>
                             `;
                         };
                         reader.readAsDataURL(this.files[0]);
                     }
                 });
-            }
-
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const field = this.dataset.field;
-                    const deletedInput = document.getElementById('deleted_images');
-                    const deleted = deletedInput.value ? deletedInput.value.split(',') : [];
-                    
-                    if (!deleted.includes(field)) {
-                        deleted.push(field);
-                        deletedInput.value = deleted.join(',');
-                    }
-                    
-                    // Reset to upload state
-                    container.innerHTML = `
-                        <div class="image-upload-icon">+</div>
-                        <input type="file" name="${field}" class="hidden" accept="image/*">
-                    `;
-                    handleImageUpload(container);
-                });
-            }
-        };
-
-        // Initialize all image containers
-        document.querySelectorAll('.image-upload').forEach(container => {
-            handleImageUpload(container);
-        });
+            });
+        }
     });
-    </script>
+});
+
+// Global reset function
+function resetImageField(fieldName) {
+    const container = document.getElementById(fieldName + '_container');
+    container.innerHTML = `
+        <div class="upload-placeholder">
+            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+            <p class="text-sm text-gray-500">Click to upload image</p>
+            <p class="text-xs text-gray-400">JPG, PNG (MAX. 5MB)</p>
+        </div>
+        <input type="file" name="${fieldName}" class="hidden" accept="image/*">
+    `;
+    
+    const input = container.querySelector('input[type="file"]');
+    container.addEventListener('click', () => input.click());
+    input.addEventListener('change', function() {
+        if (this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                container.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg" alt="Preview">
+                    <button type="button" class="delete-btn" onclick="resetImageField('${this.name}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+}
+</script>
 </body>
 </html>

@@ -139,6 +139,12 @@ $result = $stmt->get_result();
                             class="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
 
+                    <div class="flex justify-end mb-4">
+                        <a href="createtriptype.php" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                            <i class="fas fa-plus mr-2"></i>Add New Trip Type
+                        </a>
+                    </div>
+
                     <!-- Table -->
                     <div class="bg-white p-6 rounded-lg shadow-lg overflow-x-auto">
                         <table class="min-w-full" id="userTable">

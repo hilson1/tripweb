@@ -82,7 +82,40 @@ $conn->close();
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="frontend/sidebar.css">
-
+    <style>
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .status-badge {
+            @apply px-2 py-1 text-xs font-semibold rounded-full;
+        }
+        
+        .status-active {
+            @apply bg-green-100 text-green-800;
+        }
+        
+        .status-expired {
+            @apply bg-red-100 text-red-800;
+        }
+        
+        .status-featured {
+            @apply bg-blue-100 text-blue-800;
+        }
+        
+        .btn-action {
+            @apply px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200;
+        }
+        
+        .btn-edit {
+            @apply bg-blue-500 text-white hover:bg-blue-600;
+        }
+        
+        .btn-delete {
+            @apply bg-red-500 text-white hover:bg-red-600;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
