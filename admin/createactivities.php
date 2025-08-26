@@ -5,19 +5,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get and validate form data
     $activity = trim($_POST['activity']);
     $description = trim($_POST['description']);
-    $status = strtolower(trim($_POST['status'] ?? 'active'));
-    
-    // Validate status
-    if (!in_array($status, ['active', 'inactive'])) {
-        $status = 'active';
-    }
-    
+     
     // Initialize image path
     $act_image = '';
     
     // Handle file upload if image is provided
     if (isset($_FILES['act_image']) && $_FILES['act_image']['error'] === UPLOAD_ERR_OK) {
-        $target_dir = "../uploads/activities/";
+        $target_dir = "../uploads/activity/";
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
@@ -37,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $target_file = $target_dir . $new_filename;
                 
                 if (move_uploaded_file($_FILES["act_image"]["tmp_name"], $target_file)) {
-                    $act_image = "uploads/activities/" . $new_filename;
+                    $act_image = "uploads/activity/" . $new_filename;
                 } else {
                     echo "<script>alert('Error uploading image.');</script>";
                 }
@@ -46,12 +40,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     // Insert activity data into the database
-    $sql = "INSERT INTO activity (activity, description, act_image, activity_status) 
-            VALUES (?, ?, ?, ?)";
+    $sql = "INSERT INTO activities (activity, description, main_image) 
+            VALUES (?, ?, ?)";
     
     $stmt = $conn->prepare($sql);
     if ($stmt) {
-        $stmt->bind_param("ssss", $activity, $description, $act_image, $status);
+        $stmt->bind_param("sss", $activity, $description, $act_image);
         
         if ($stmt->execute()) {
             echo "<script>alert('Activity created successfully'); window.location.href = 'allactivities.php';</script>";
@@ -124,13 +118,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               <p class="text-xs text-gray-500 mt-1">Only JPG, JPEG, PNG, GIF files allowed (Max 5MB)</p>
             </div>
             
-            <div class="form-group">
-              <label class="form-label" for="status">Status *</label>
-              <select name="status" id="status" class="form-input" required>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
           </div>
           
           <div class="mt-8 flex justify-end space-x-4">

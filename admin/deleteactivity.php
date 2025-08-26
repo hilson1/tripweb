@@ -1,30 +1,29 @@
 <?php
 require '../connection.php';
 
-// Check if activity ID is provided
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if (!isset($_GET['name']) || empty($_GET['name'])) {
     header("Location: allactivities.php");
     exit();
 }
 
-$activity_id = $_GET['id'];
+$activity_name = htmlspecialchars(trim($_GET['name']), ENT_QUOTES, 'UTF-8');
 
 // Fetch activity data to get image path
-$stmt = $conn->prepare("SELECT act_image FROM activity WHERE activity_id = ?");
-$stmt->bind_param("i", $activity_id);
+$stmt = $conn->prepare("SELECT main_image FROM activities WHERE activity = ?");
+$stmt->bind_param("s", $activity_name);
 $stmt->execute();
 $result = $stmt->get_result();
 $activity = $result->fetch_assoc();
 
 if ($activity) {
     // Delete the activity
-    $delete_stmt = $conn->prepare("DELETE FROM activity WHERE activity_id = ?");
-    $delete_stmt->bind_param("i", $activity_id);
+    $delete_stmt = $conn->prepare("DELETE FROM activities WHERE activity = ?");
+    $delete_stmt->bind_param("s", $activity_name);
     
     if ($delete_stmt->execute()) {
         // Delete associated image if it exists
-        if ($activity['act_image'] && file_exists("../uploads/activities/" . $activity['act_image'])) {
-            unlink("../uploads/activities/" . $activity['act_image']);
+        if ($activity['main_image'] && file_exists("../uploads/activity/" . $activity['main_image'])) {
+            unlink("../uploads/activity/" . $activity['main_image']);
         }
         
         echo "<script>alert('Activity deleted successfully'); window.location.href = 'allactivities.php';</script>";
