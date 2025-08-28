@@ -116,11 +116,12 @@ $result = $stmt->get_result();
                   </td>
                   <td class="py-4 px-6">
                     <div class="flex space-x-2">
-                      <a href="editdestination.php?id=<?php echo $destination['distination']; ?>" 
-                         class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
+                     <a href="editdestination.php?name=<?php echo urlencode($destination['distination']); ?>"
+                      class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
+                      >
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="deletedestination.php?id=<?php echo $destination['distination']; ?>" 
+                      <a href="deletedestination.php?name=<?php echo urlencode($destination['distination']); ?>" 
                          class="action-button bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
                          onclick="return confirm('Are you sure you want to delete this destination?')">
                         <i class="fas fa-trash"></i>

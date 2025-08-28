@@ -5,13 +5,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get and validate form data
     $destination = trim($_POST['destination']);
     $description = trim($_POST['description']);
-    $status = strtolower(trim($_POST['status'] ?? 'active'));
+
     
-    // Validate status
-    if (!in_array($status, ['active', 'inactive'])) {
-        $status = 'active';
+    if (empty($destination) || empty($description)) {
+        $error = "Destination name and description are required.";
     }
-    
     // Initialize image path
     $imagePath = '';
     
@@ -49,9 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Only proceed if no errors
     if (!isset($error)) {
-        $stmt = $conn->prepare("INSERT INTO destination (destination, description, dest_image, status) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO destinations (distination, description, main_image) VALUES (?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param("ssss", $destination, $description, $imagePath, $status);
+            $stmt->bind_param("sss", $destination, $description, $imagePath);
             
             if ($stmt->execute()) {
                 header("Location: alldestination.php?success=1");
@@ -120,14 +118,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label class="block text-gray-700 mb-2 font-medium">Status *</label>
               <select name="status" id="status" required
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="active" selected>Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </div>
+            </div> -->
             
             <div class="md:col-span-2 form-group">
               <label class="block text-gray-700 mb-2 font-medium">Description *</label>
