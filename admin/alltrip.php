@@ -1,12 +1,6 @@
 <?php
 require '../connection.php';
-
 session_start();
-// Uncomment these lines when ready to implement authentication
-// if (!isset($_SESSION['admin_id'])) {
-//   header('location:adminlogin.php');
-//   exit;
-// }
 
 // Handle delete request
 if (isset($_POST['delete_trip'])) {
@@ -15,35 +9,27 @@ if (isset($_POST['delete_trip'])) {
     try {
         // Start transaction
         $conn->begin_transaction();
-        
-        // Delete related trip images first
-        $stmt = $conn->prepare("SELECT image_path FROM trip_images WHERE tripid = ?");
+
+        // Fetch images from view (trip_details_view includes image paths)
+        $stmt = $conn->prepare("SELECT main_image, side_image1, side_image2 FROM trip_details_view WHERE tripid = ?");
         $stmt->bind_param("i", $tripId);
         $stmt->execute();
-        $images = $stmt->get_result();
-        
-        // Delete image files from server
-        while ($image = $images->fetch_assoc()) {
-            if (file_exists($image['image_path'])) {
-                unlink($image['image_path']);
+        $images = $stmt->get_result()->fetch_assoc();
+
+        // Delete image files from server if they exist
+        foreach (['main_image', 'side_image1', 'side_image2'] as $imgField) {
+            if (!empty($images[$imgField]) && file_exists($images[$imgField])) {
+                unlink($images[$imgField]);
             }
         }
-        
-        // Delete from trip_images table
-        $stmt = $conn->prepare("DELETE FROM trip_images WHERE tripid = ?");
-        $stmt->bind_param("i", $tripId);
-        $stmt->execute();
-        
-        // Delete from trips table
+
+        // Delete trip from trips table
         $stmt = $conn->prepare("DELETE FROM trips WHERE tripid = ?");
         $stmt->bind_param("i", $tripId);
         $stmt->execute();
-        
-        // Commit transaction
+
         $conn->commit();
-        
         $_SESSION['success'] = "Trip deleted successfully!";
-        
     } catch (Exception $e) {
         $conn->rollback();
         $_SESSION['error'] = "Error deleting trip: " . $e->getMessage();
@@ -53,26 +39,25 @@ if (isset($_POST['delete_trip'])) {
     exit();
 }
 
-// Fetch trips with search functionality and proper join with trip_types
+// Search
 $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
 $whereClause = '';
 $params = [];
 $types = '';
 
 if (!empty($searchTerm)) {
-    $whereClause = "WHERE trips.title LIKE ? OR trips.location LIKE ? OR tt.name LIKE ?";
+    $whereClause = "WHERE title LIKE ? OR location LIKE ? OR triptype LIKE ?";
     $searchParam = "%$searchTerm%";
     $params = [$searchParam, $searchParam, $searchParam];
     $types = 'sss';
 }
 
-$sql = "SELECT trips.tripid, trips.title, trips.departurefrom, trips.groupsize, 
-               trips.location, trips.price, trips.status, trips.triptype_id,
-               tt.triptype as name, tt.description as triptype_description
-        FROM trips 
-        LEFT JOIN triptypes tt ON trips.triptype_id = tt.triptype_id
-        $whereClause 
-        ORDER BY trips.tripid DESC";
+// Use the view instead of manual joins
+$sql = "SELECT tripid, title, departurefrom, groupsize, location, price, triptype, 
+               main_image, side_image1, side_image2
+        FROM trip_details_view
+        $whereClause
+        ORDER BY tripid DESC";
 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
@@ -82,301 +67,531 @@ $stmt->execute();
 $result = $stmt->get_result();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Management - Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        .table-container {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-        
-        .status-badge {
-            @apply px-2 py-1 text-xs font-semibold rounded-full;
-        }
-        
-        .status-active {
-            @apply bg-green-100 text-green-800;
-        }
-        
-        .status-expired {
-            @apply bg-red-100 text-red-800;
-        }
-        
-        .status-featured {
-            @apply bg-blue-100 text-blue-800;
-        }
-        
-        .btn-action {
-            @apply px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200;
-        }
-        
-        .btn-edit {
-            @apply bg-blue-500 text-white hover:bg-blue-600;
-        }
-        
-        .btn-delete {
-            @apply bg-red-500 text-white hover:bg-red-600;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trip Management - ThankYouNepalTrip</title>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Dropdown functionality
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        if (menu !== this.nextElementSibling) {
-                            menu.classList.add('hidden');
-                        }
-                    });
-                    const dropdownMenu = this.nextElementSibling;
-                    dropdownMenu.classList.toggle('hidden');
-                });
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function (event) {
-                if (!event.target.closest('.dropdown-toggle')) {
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        menu.classList.add('hidden');
-                    });
-                }
-            });
-
-            // Search functionality
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value;
-                    const url = new URL(window.location);
-                    if (searchTerm) {
-                        url.searchParams.set('search', searchTerm);
-                    } else {
-                        url.searchParams.delete('search');
-                    }
-                    window.location.href = url.toString();
-                });
-            }
-
-            // Delete confirmation
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const tripName = this.dataset.tripName;
-                    if (confirm(`Are you sure you want to delete "${tripName}"? This action cannot be undone.`)) {
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.innerHTML = `
-                            <input type="hidden" name="delete_trip" value="1">
-                            <input type="hidden" name="trip_id" value="${this.dataset.tripId}">
-                        `;
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
-                });
-            });
-        });
-    </script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="frontend/sidebar.css">
 </head>
 
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <?php include("frontend/asidebar.php"); ?>
-        
-        <!-- Main Content -->
-        <div class="ml-64 p-6 w-[84%] mx-auto mt-16">
-            <!-- Success/Error Messages -->
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    <span class="block sm:inline"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></span>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    <span class="block sm:inline"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></span>
-                </div>
-            <?php endif; ?>
-            
-            <div class="bg-white shadow-md rounded-lg p-6">
-                <!-- Header Section -->
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-800 mt-6 tracking-tighter">Trip Management</h1>
-                        <p class="text-gray-600 mt-1">Manage all your trips from here</p>
-                    </div>
-                    <a href="createtrip.php" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                        <i class="fas fa-plus mr-2"></i>Add New Trip
-                    </a>
-                </div>
-                
-                <!-- Search and Filter Section -->
-                <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div class="flex-1 max-w-md">
-                            <div class="relative">
-                                <input type="text" id="searchInput" 
-                                       placeholder="Search trips by name, location, or type..." 
-                                       value="<?php echo htmlspecialchars($searchTerm); ?>"
-                                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-search text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-sm text-gray-600">
-                            Total Trips: <span class="font-semibold"><?php echo $result->num_rows; ?></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Trips Table -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="table-container">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 sticky top-0">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Trip Title
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Departure From
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Trip Type
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Group Size
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Location
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Price (USD)
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <?php if ($result->num_rows > 0): ?>
-                                    <?php while ($trip = $result->fetch_assoc()): ?>
-                                        <tr class="hover:bg-gray-50 transition-colors duration-200">
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900">
-                                                    <?php echo htmlspecialchars($trip['title']); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">
-                                                    <?php echo htmlspecialchars($trip['departurefrom'] ?? 'N/A'); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900 capitalize">
-                                                    <?php echo htmlspecialchars($trip['name']); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">
-                                                    <?php echo htmlspecialchars($trip['groupsize'] ?? 'N/A'); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900 capitalize">
-                                                    <?php echo htmlspecialchars($trip['location']); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-semibold text-gray-900">
-                                                    $<?php echo number_format($trip['price'], 2); ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <?php
-                                                $status = strtolower($trip['status']);
-                                                $statusClasses = [
-                                                    'draft' => 'bg-yellow-100 text-yellow-800',
-                                                    'active' => 'bg-green-100 text-green-800',
-                                                    'expired' => 'bg-red-100 text-red-800',
-                                                ];
-                                                $badgeClass = $statusClasses[$status] ?? 'bg-gray-100 text-gray-800';
-                                                ?>
-                                                <span class="px-3 py-1 rounded-full text-sm font-medium <?php echo $badgeClass; ?>">
-                                                    <?php echo ucfirst($trip['status']); ?>
-                                                </span>
-                                            </td>
+<body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
+  <!-- Overlay for mobile sidebar -->
+  <div class="overlay" :class="{ 'open': sidebarOpen }" @click="sidebarOpen = false"></div>
 
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                <a href="edittrip.php?id=<?php echo $trip['tripid']; ?>" 
-                                                   class="btn-action btn-edit inline-flex items-center">
-                                                    <i class="fas fa-edit mr-1"></i>Edit
-                                                </a>
-                                                <button class="btn-action btn-delete delete-btn inline-flex items-center" 
-                                                        data-trip-id="<?php echo $trip['tripid']; ?>"
-                                                        data-trip-name="<?php echo htmlspecialchars($trip['title']); ?>">
-                                                    <i class="fas fa-trash mr-1"></i>Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="8" class="px-6 py-12 text-center">
-                                            <div class="text-gray-500">
-                                                <i class="fas fa-map-marked-alt text-4xl mb-4"></i>
-                                                <p class="text-lg font-medium">No trips found</p>
-                                                <p class="text-sm">
-                                                    <?php if (!empty($searchTerm)): ?>
-                                                        Try adjusting your search criteria or 
-                                                        <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="text-blue-600 hover:text-blue-800">clear search</a>
-                                                    <?php else: ?>
-                                                        Get started by creating your first trip
-                                                    <?php endif; ?>
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Pagination would go here if needed -->
-                <?php if ($result->num_rows > 0): ?>
-                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4">
-                        <div class="flex-1 flex justify-between sm:hidden">
-                            <!-- Mobile pagination buttons -->
-                        </div>
-                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                            <div>
-                                <p class="text-sm text-gray-700">
-                                    Showing <span class="font-medium"><?php echo $result->num_rows; ?></span> results
-                                </p>
-                            </div>
-                            <!-- Pagination buttons would go here -->
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
+  <!-- Top Navigation Bar -->
+  <?php include 'frontend/header.php'; ?>
+
+  <!-- Sidebar -->
+  <?php include 'frontend/sidebar.php'; ?>
+
+  <!-- Main Content Area -->
+  <main class="main-content pt-16 min-h-screen transition-all duration-300">
+    <div class="p-6">
+      <!-- Success/Error Messages -->
+      <?php if (isset($_SESSION['success'])): ?>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
+          <span class="block sm:inline"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></span>
         </div>
+      <?php endif; ?>
+      
+      <?php if (isset($_SESSION['error'])): ?>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <span class="block sm:inline"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></span>
+        </div>
+      <?php endif; ?>
+
+      <!-- Trip Management Content -->
+      <div class="bg-white rounded-xl shadow-md p-6">
+        <!-- Header Section -->
+        <div class="mb-8">
+          <div class="gradient-bg rounded-2xl p-6 text-white">
+            <div class="flex justify-between items-center">
+              <div>
+                <h1 class="text-3xl font-bold mb-2">
+                  <i class="fas fa-map-marked-alt mr-3"></i>Trip Management
+                </h1>
+                <p class="text-blue-100">Manage and monitor all trips</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold" id="totalTrips">
+                  <?php echo $result->num_rows; ?>
+                </div>
+                <div class="text-blue-100">Total Trips</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add New Trip Button -->
+        <div class="mb-6 flex justify-end">
+          <a href="createtrip.php" class="btn-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
+            <i class="fas fa-plus mr-2"></i>Add New Trip
+          </a>
+        </div>
+
+        <!-- Export Buttons -->
+        <?php include 'frontend/exportdata.php'; ?>
+
+        <!-- Search Section -->
+        <!-- <div class="mb-6">
+          <div class="relative max-w-md">
+            <input type="text" id="searchInput" 
+                   placeholder="Search trips by name, location, or type..." 
+                   value="<?php echo htmlspecialchars($searchTerm); ?>"
+                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search text-gray-400"></i>
+            </div>
+          </div>
+        </div> -->
+
+        <!-- Table Section -->
+        <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="min-w-full" id="tripTable">
+              <thead class="gradient-bg text-white">
+                <tr>
+                  <th class="py-4 px-6 text-left font-semibold">
+                    <i class="fas fa-id-card mr-2"></i>ID
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold">
+                    <i class="fas fa-map-marked-alt mr-2"></i>Trip Title
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold">
+                    <i class="fas fa-image mr-2"></i>Preview
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
+                    <i class="fas fa-plane-departure mr-2"></i>Departure
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
+                    <i class="fas fa-tag mr-2"></i>Type
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
+                    <i class="fas fa-users mr-2"></i>Group Size
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold">
+                    <i class="fas fa-map-marker-alt mr-2"></i>Location
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold">
+                    <i class="fas fa-dollar-sign mr-2"></i>Price
+                  </th>
+                  <th class="py-4 px-6 text-left font-semibold">
+                    <i class="fas fa-cog mr-2"></i>Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <?php
+                if ($result->num_rows > 0) {
+                  while ($trip = $result->fetch_assoc()) {
+                ?>
+                <tr class="table-row hover:bg-gray-50">
+                  <td class="py-4 px-6">
+                    <span class="font-mono text-sm text-gray-600"><?php echo htmlspecialchars($trip["tripid"]); ?></span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="font-semibold text-gray-900">
+                      <?php echo htmlspecialchars($trip["title"]); ?>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    <?php if (!empty($trip["main_image"])): ?>
+                        <img src="../<?php echo htmlspecialchars($trip["main_image"]); ?>" 
+                            alt="<?php echo htmlspecialchars($trip["title"]); ?>" 
+                            class="w-16 h-16 object-cover rounded-lg"
+                            onerror="this.onerror=null; this.src='../assets/no-image.jpg';">
+                    <?php else: ?>
+                        <div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                        <i class="fas fa-image"></i>
+                        </div>
+                    <?php endif; ?>
+                  </td>
+                  <td class="py-4 px-6 hidden-mobile">
+                    <span class="text-gray-700">
+                      <?php echo htmlspecialchars($trip["departurefrom"] ?? 'N/A'); ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 hidden-mobile">
+                    <span class="text-gray-700 capitalize">
+                      <?php echo htmlspecialchars($trip["triptype"]); ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 hidden-mobile">
+                    <span class="text-gray-700">
+                      <?php echo htmlspecialchars($trip["groupsize"] ?? 'N/A'); ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-gray-700 capitalize">
+                      <?php echo htmlspecialchars($trip["location"]); ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="font-semibold text-gray-900">
+                      $<?php echo number_format($trip["price"], 2); ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex space-x-2">
+                      <a href="edittrip.php?id=<?php echo $trip['tripid']; ?>" 
+                         class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      <button class="action-button bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors delete-btn"
+                              data-trip-id="<?php echo $trip['tripid']; ?>"
+                              data-trip-name="<?php echo htmlspecialchars($trip['title']); ?>">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <?php 
+                  }
+                } else {
+                ?>
+                <tr>
+                  <td colspan="9" class="py-8 px-6 text-center text-gray-500">
+                    <i class="fas fa-map-marked-alt text-4xl mb-4 block"></i>
+                    <p class="text-lg">No trips found</p>
+                    <?php if (!empty($searchTerm)): ?>
+                        <p class="text-sm mt-2">
+                            Try adjusting your search criteria or 
+                            <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="text-blue-600 hover:text-blue-800">clear search</a>
+                        </p>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+                <?php } ?>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-gray-600">
+                Showing <span id="startEntry">1</span> to <span id="endEntry">10</span> of <span id="totalEntries"><?php echo $result->num_rows; ?></span> entries
+              </div>
+              <div class="flex space-x-2" id="pagination">
+                <!-- Pagination buttons will be generated by JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </main>
+
+  <!-- Alpine JS for dropdown functionality -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  
+  <script>
+    // Initialize sidebar state
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('main', () => ({
+        sidebarOpen: window.innerWidth >= 1024,
+        
+        init() {
+          // Close sidebar on mobile by default
+          if (window.innerWidth < 1024) {
+            this.sidebarOpen = false;
+          }
+          
+          // Update state when window is resized
+          window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+              this.sidebarOpen = true;
+            }
+          });
+        }
+      }));
+    });
+
+    // Table functionality
+    let currentPage = 1;
+    let entriesPerPage = 10;
+    let allRows = [];
+    let filteredRows = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      allRows = Array.from(document.querySelectorAll('#tripTable tbody tr')).filter(row => 
+        !row.querySelector('td[colspan]')
+      );
+      filteredRows = [...allRows];
+      updateTable();
+
+      // Search functionality
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+          let searchTimeout;
+          searchInput.addEventListener('input', function() {
+              clearTimeout(searchTimeout);
+              searchTimeout = setTimeout(() => {
+                  const searchTerm = this.value;
+                  const url = new URL(window.location);
+                  if (searchTerm) {
+                      url.searchParams.set('search', searchTerm);
+                  } else {
+                      url.searchParams.delete('search');
+                  }
+                  window.location.href = url.toString();
+              }, 500); // Debounce for 500ms
+          });
+      }
+
+      // Delete confirmation
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              const tripName = this.dataset.tripName;
+              if (confirm(`Are you sure you want to delete "${tripName}"? This action cannot be undone.`)) {
+                  const form = document.createElement('form');
+                  form.method = 'POST';
+                  form.innerHTML = `
+                      <input type="hidden" name="delete_trip" value="1">
+                      <input type="hidden" name="trip_id" value="${this.dataset.tripId}">
+                  `;
+                  document.body.appendChild(form);
+                  form.submit();
+              }
+          });
+      });
+    });
+
+    function changeEntries() {
+      entriesPerPage = parseInt(document.getElementById('entries').value);
+      currentPage = 1;
+      updateTable();
+    }
+
+    function searchTable() {
+      const searchTerm = document.getElementById('search').value.toLowerCase();
+      
+      if (searchTerm === '') {
+        filteredRows = [...allRows];
+      } else {
+        filteredRows = allRows.filter(row => {
+          const cells = row.querySelectorAll('td');
+          return Array.from(cells).some(cell => 
+            cell.textContent.toLowerCase().includes(searchTerm)
+          );
+        });
+      }
+      
+      currentPage = 1;
+      updateTable();
+    }
+
+    function updateTable() {
+      // Hide all rows
+      allRows.forEach(row => row.style.display = 'none');
+      
+      // Calculate pagination
+      const totalEntries = filteredRows.length;
+      const startIndex = (currentPage - 1) * entriesPerPage;
+      const endIndex = Math.min(startIndex + entriesPerPage, totalEntries);
+      
+      // Show relevant rows
+      for (let i = startIndex; i < endIndex; i++) {
+        if (filteredRows[i]) {
+          filteredRows[i].style.display = '';
+        }
+      }
+      
+      // Update pagination info
+      document.getElementById('startEntry').textContent = totalEntries > 0 ? startIndex + 1 : 0;
+      document.getElementById('endEntry').textContent = endIndex;
+      document.getElementById('totalEntries').textContent = totalEntries;
+      
+      // Update pagination buttons
+      updatePagination(totalEntries);
+    }
+
+    function updatePagination(totalEntries) {
+      const totalPages = Math.ceil(totalEntries / entriesPerPage);
+      const paginationDiv = document.getElementById('pagination');
+      paginationDiv.innerHTML = '';
+      
+      if (totalPages <= 1) return;
+      
+      // Previous button
+      if (currentPage > 1) {
+        paginationDiv.innerHTML += `
+          <button onclick="changePage(${currentPage - 1})" 
+                  class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <i class="fas fa-chevron-left"></i>
+          </button>`;
+      }
+      
+      // Page numbers
+      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        const activeClass = i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50';
+        paginationDiv.innerHTML += `
+          <button onclick="changePage(${i})" 
+                  class="px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors ${activeClass}">
+            ${i}
+          </button>`;
+      }
+      
+      // Next button
+      if (currentPage < totalPages) {
+        paginationDiv.innerHTML += `
+          <button onclick="changePage(${currentPage + 1})" 
+                  class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <i class="fas fa-chevron-right"></i>
+          </button>`;
+      }
+    }
+
+    function changePage(page) {
+      currentPage = page;
+      updateTable();
+    }
+
+    // Export Functions
+    function printTable() {
+      const printWindow = window.open('', '_blank');
+      const tableHTML = generatePrintableTable();
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Trips Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; text-align: center; margin-bottom: 30px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .print-date { text-align: right; color: #666; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="print-date">Generated on: ${new Date().toLocaleString()}</div>
+          <h1>Trips Report</h1>
+          ${tableHTML}
+        </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('l', 'mm', 'a4'); // landscape orientation
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Trips Report', 14, 22);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
+      
+      // Get table data
+      const tableData = getTableData();
+      
+      // Generate PDF table
+      doc.autoTable({
+        head: [['ID', 'Title', 'Departure', 'Type', 'Group Size', 'Location', 'Price']],
+        body: tableData,
+        startY: 40,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [102, 126, 234],
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [249, 249, 249]
+        }
+      });
+      
+      doc.save('trips-report.pdf');
+    }
+
+    function exportToExcel() {
+      const tableData = getTableData();
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['ID', 'Title', 'Departure', 'Type', 'Group Size', 'Location', 'Price'],
+        ...tableData
+      ]);
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Trips');
+      
+      XLSX.writeFile(wb, 'trips-report.xlsx');
+    }
+
+    function getTableData() {
+      const data = [];
+      filteredRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+          data.push([
+            cells[0].textContent.trim(), // ID
+            cells[1].textContent.trim(), // Title
+            cells[3] ? cells[3].textContent.trim() : 'N/A', // Departure
+            cells[4] ? cells[4].textContent.trim() : 'N/A', // Type
+            cells[5] ? cells[5].textContent.trim() : 'N/A', // Group Size
+            cells[6] ? cells[6].textContent.trim() : 'N/A', // Location
+            cells[7] ? cells[7].textContent.trim() : 'N/A' // Price
+          ]);
+        }
+      });
+      return data;
+    }
+
+    function generatePrintableTable() {
+      const tableData = getTableData();
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Departure</th>
+              <th>Type</th>
+              <th>Group Size</th>
+              <th>Location</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      tableData.forEach(row => {
+        html += '<tr>';
+        row.forEach(cell => {
+          html += `<td>${cell}</td>`;
+        });
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table>';
+      return html;
+    }
+  </script>
 </body>
 </html>
 

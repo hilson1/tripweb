@@ -1,8 +1,34 @@
 <?php
 require '../connection.php';
  
+// Handle delete request
+if (isset($_POST['delete_activity'])) {
+    $activity_name = $_POST['activity_name'];
+    
+    if (!empty($activity_name)) {
+        $stmt = $conn->prepare("DELETE FROM triptypes WHERE triptype = ?");
+        
+        if ($stmt) {
+            $stmt->bind_param("s", $triptype_name);
+            
+            if ($stmt->execute()) {
+                header("Location: alltriptype.php?delete=success");
+                exit();
+            } else {
+                $delete_error = "Error deleting: " . $stmt->error;
+            }
+            
+            $stmt->close();
+        } else {
+            $delete_error = "Error preparing statement: " . $conn->error;
+        }
+    } else {
+        $delete_error = "Invalid triptype name";
+    }
+}
+
 // Get fresh data for display
-$stmt = $conn->prepare("SELECT * FROM activity ORDER BY activity_id DESC");
+$stmt = $conn->prepare("SELECT * FROM activities");
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -61,8 +87,6 @@ $result = $stmt->get_result();
           </div>
         </div>
 
-        <!-- Export Buttons -->
-        <?php include 'frontend/exportdata.php'; ?>
 
         <!-- Table Section -->
         <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
@@ -70,9 +94,6 @@ $result = $stmt->get_result();
             <table class="min-w-full" id="activityTable">
               <thead class="gradient-bg text-white">
                 <tr>
-                  <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-id-card mr-2"></i>ID
-                  </th>
                   <th class="py-4 px-6 text-left font-semibold">
                     <i class="fas fa-hiking mr-2"></i>Activity
                   </th>
@@ -83,9 +104,6 @@ $result = $stmt->get_result();
                     <i class="fas fa-image mr-2"></i>Image
                   </th>
                   <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-info-circle mr-2"></i>Status
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold">
                     <i class="fas fa-cog mr-2"></i>Actions
                   </th>
                 </tr>
@@ -94,26 +112,8 @@ $result = $stmt->get_result();
                 <?php
                 if ($result->num_rows > 0) {
                   while ($activity = $result->fetch_assoc()) {
-                    $statusClass = '';
-                    $statusText = '';
-                    switch($activity['activity_status']) {
-                      case 'active':
-                        $statusClass = 'status-active';
-                        $statusText = 'Active';
-                        break;
-                      case 'inactive':
-                        $statusClass = 'status-inactive';
-                        $statusText = 'Inactive';
-                        break;
-                      default:
-                        $statusClass = 'bg-gray-500';
-                        $statusText = 'Unknown';
-                    }
                 ?>
                 <tr class="table-row hover:bg-gray-50">
-                  <td class="py-4 px-6">
-                    <span class="font-mono text-sm text-gray-600"><?php echo htmlspecialchars($activity["activity_id"]); ?></span>
-                  </td>
                   <td class="py-4 px-6">
                     <div class="font-semibold text-gray-900">
                       <?php echo htmlspecialchars($activity["activity"]); ?>
@@ -123,14 +123,14 @@ $result = $stmt->get_result();
                     <span class="text-gray-700">
                       <?php
                         $desc = $activity["description"];
-                        echo htmlspecialchars(substr($desc, 0, 50));
+                        echo htmlspecialchars(substr($desc, 0, 100));
                         if (strlen($desc) > 50) echo '...';
                       ?>
                     </span>
                   </td>
                   <td class="py-4 px-6">
-                    <?php if (!empty($activity["act_image"])): ?>
-                        <img src="../<?php echo htmlspecialchars($activity["act_image"]); ?>" 
+                    <?php if (!empty($activity["main_image"])): ?>
+                        <img src="../<?php echo htmlspecialchars($activity["main_image"]); ?>" 
                             alt="<?php echo htmlspecialchars($activity["activity"]); ?>" 
                             class="w-16 h-16 object-cover rounded-lg"
                             onerror="this.onerror=null; this.src='../assets/no-image.jpg';">
@@ -141,27 +141,12 @@ $result = $stmt->get_result();
                     <?php endif; ?>
                   </td>
                   <td class="py-4 px-6">
-                    <?php 
-                    // Get the status from database, default to 'active' if empty
-                    $status = !empty($activity['activity_status']) ? strtolower(trim($activity['activity_status'])) : 'active';
-                    
-                    // Determine the CSS class based on status
-                    $statusClass = ($status === 'active') ? 'bg-green-500' : 'bg-red-500';
-                    
-                    // Capitalize the first letter for display
-                    $displayStatus = ucfirst($status);
-                    ?>
-                    <span class="<?php echo $statusClass; ?> text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        <?php echo $displayStatus; ?>
-                    </span>
-                </td>
-                  <td class="py-4 px-6">
                     <div class="flex space-x-2">
-                      <a href="editactivity.php?id=<?php echo $activity['activity_id']; ?>" 
+                      <a href="editactivity.php?name=<?php echo urlencode($activity['activity']); ?>" 
                          class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="deleteactivity.php?id=<?php echo $activity['activity_id']; ?>" 
+                      <a href="deleteactivity.php?name=<?php echo urlencode($activity['activity']); ?>" 
                          class="action-button bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
                          onclick="return confirm('Are you sure you want to delete this activity?')">
                         <i class="fas fa-trash"></i>
@@ -174,9 +159,15 @@ $result = $stmt->get_result();
                 } else {
                 ?>
                 <tr>
-                  <td colspan="6" class="py-8 px-6 text-center text-gray-500">
-                    <i class="fas fa-hiking text-4xl mb-4 block"></i>
+                  <td colspan="9" class="py-8 px-6 text-center text-gray-500">
+                    <i class="fas fa-map-marked-alt text-4xl mb-4 block"></i>
                     <p class="text-lg">No activities found</p>
+                    <?php if (!empty($searchTerm)): ?>
+                        <p class="text-sm mt-2">
+                            Try adjusting your search criteria or 
+                            <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="text-blue-600 hover:text-blue-800">clear search</a>
+                        </p>
+                    <?php endif; ?>
                   </td>
                 </tr>
                 <?php } ?>

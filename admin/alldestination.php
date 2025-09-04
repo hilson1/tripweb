@@ -2,7 +2,7 @@
 require '../connection.php';
  
 // Get fresh data for display
-$stmt = $conn->prepare("SELECT * FROM destination ORDER BY destination_id DESC");
+$stmt = $conn->prepare("SELECT * FROM destinations ORDER BY distination DESC");
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -61,8 +61,6 @@ $result = $stmt->get_result();
           </div>
         </div>
 
-        <!-- Export Buttons -->
-        <?php include 'frontend/exportdata.php'; ?>
 
         <!-- Table Section -->
         <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
@@ -70,9 +68,6 @@ $result = $stmt->get_result();
             <table class="min-w-full" id="destinationTable">
               <thead class="gradient-bg text-white">
                 <tr>
-                  <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-id-card mr-2"></i>ID
-                  </th>
                   <th class="py-4 px-6 text-left font-semibold">
                     <i class="fas fa-map-marked-alt mr-2"></i>Destination
                   </th>
@@ -83,9 +78,6 @@ $result = $stmt->get_result();
                     <i class="fas fa-image mr-2"></i>Image
                   </th>
                   <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-info-circle mr-2"></i>Status
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold">
                     <i class="fas fa-cog mr-2"></i>Actions
                   </th>
                 </tr>
@@ -94,44 +86,26 @@ $result = $stmt->get_result();
                 <?php
                 if ($result->num_rows > 0) {
                   while ($destination = $result->fetch_assoc()) {
-                    $statusClass = '';
-                    $statusText = '';
-                    switch($destination['status']) {
-                      case 'active':
-                        $statusClass = 'status-active';
-                        $statusText = 'Active';
-                        break;
-                      case 'inactive':
-                        $statusClass = 'status-inactive';
-                        $statusText = 'Inactive';
-                        break;
-                      default:
-                        $statusClass = 'bg-gray-500';
-                        $statusText = 'Unknown';
-                    }
                 ?>
                 <tr class="table-row hover:bg-gray-50">
                   <td class="py-4 px-6">
-                    <span class="font-mono text-sm text-gray-600"><?php echo htmlspecialchars($destination["destination_id"]); ?></span>
-                  </td>
-                  <td class="py-4 px-6">
                     <div class="font-semibold text-gray-900">
-                      <?php echo htmlspecialchars($destination["destination"]); ?>
+                      <?php echo htmlspecialchars($destination["distination"]); ?>
                     </div>
                   </td>
                   <td class="py-4 px-6 hidden-mobile">
                     <span class="text-gray-700">
                       <?php
                         $desc = $destination["description"];
-                        echo htmlspecialchars(substr($desc, 0, 50));
+                        echo htmlspecialchars(substr($desc, 0, 100));
                         if (strlen($desc) > 50) echo '...';
                       ?>
                     </span>
                   </td>
                   <td class="py-4 px-6">
-                    <?php if (!empty($destination["dest_image"])): ?>
-                        <img src="../<?php echo htmlspecialchars($destination["dest_image"]); ?>" 
-                            alt="<?php echo htmlspecialchars($destination["destination"]); ?>" 
+                    <?php if (!empty($destination["main_image"])): ?>
+                        <img src="../<?php echo htmlspecialchars($destination["main_image"]); ?>" 
+                            alt="<?php echo htmlspecialchars($destination["distination"]); ?>" 
                             class="w-16 h-16 object-cover rounded-lg"
                             onerror="this.onerror=null; this.src='../assets/no-image.jpg';">
                     <?php else: ?>
@@ -141,27 +115,13 @@ $result = $stmt->get_result();
                     <?php endif; ?>
                   </td>
                   <td class="py-4 px-6">
-                    <?php 
-                    // Get the status from database, default to 'active' if empty
-                    $status = !empty($destination['status']) ? strtolower(trim($destination['status'])) : 'active';
-                    
-                    // Determine the CSS class based on status
-                    $statusClass = ($status === 'active') ? 'bg-green-500' : 'bg-red-500';
-                    
-                    // Capitalize the first letter for display
-                    $displayStatus = ucfirst($status);
-                    ?>
-                    <span class="<?php echo $statusClass; ?> text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        <?php echo $displayStatus; ?>
-                    </span>
-                </td>
-                  <td class="py-4 px-6">
                     <div class="flex space-x-2">
-                      <a href="editdestination.php?id=<?php echo $destination['destination_id']; ?>" 
-                         class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
+                     <a href="editdestination.php?name=<?php echo urlencode($destination['distination']); ?>"
+                      class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
+                      >
                         <i class="fas fa-edit"></i>
                       </a>
-                      <a href="deletedestination.php?id=<?php echo $destination['destination_id']; ?>" 
+                      <a href="deletedestination.php?name=<?php echo urlencode($destination['distination']); ?>" 
                          class="action-button bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
                          onclick="return confirm('Are you sure you want to delete this destination?')">
                         <i class="fas fa-trash"></i>
@@ -330,130 +290,6 @@ $result = $stmt->get_result();
       updateTable();
     }
 
-    // Export Functions
-    function printTable() {
-      const printWindow = window.open('', '_blank');
-      const tableHTML = generatePrintableTable();
-      
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Destinations Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #333; text-align: center; margin-bottom: 30px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f5f5f5; font-weight: bold; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            .print-date { text-align: right; color: #666; margin-bottom: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="print-date">Generated on: ${new Date().toLocaleString()}</div>
-          <h1>Destinations Report</h1>
-          ${tableHTML}
-        </body>
-        </html>
-      `);
-      
-      printWindow.document.close();
-      printWindow.print();
-    }
-
-    function exportToPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('l', 'mm', 'a4'); // landscape orientation
-      
-      // Add title
-      doc.setFontSize(18);
-      doc.text('Destinations Report', 14, 22);
-      
-      // Add date
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
-      
-      // Get table data
-      const tableData = getTableData();
-      
-      // Generate PDF table
-      doc.autoTable({
-        head: [['ID', 'Destination', 'Description', 'Status']],
-        body: tableData,
-        startY: 40,
-        styles: {
-          fontSize: 8,
-          cellPadding: 3,
-        },
-        headStyles: {
-          fillColor: [102, 126, 234],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [249, 249, 249]
-        }
-      });
-      
-      doc.save('destinations-report.pdf');
-    }
-
-    function exportToExcel() {
-      const tableData = getTableData();
-      const ws = XLSX.utils.aoa_to_sheet([
-        ['ID', 'Destination', 'Description', 'Status'],
-        ...tableData
-      ]);
-      
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Destinations');
-      
-      XLSX.writeFile(wb, 'destinations-report.xlsx');
-    }
-
-    function getTableData() {
-      const data = [];
-      filteredRows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length > 0) {
-          data.push([
-            cells[0].textContent.trim(), // ID
-            cells[1].textContent.trim(), // Destination
-            cells[2] ? cells[2].textContent.trim() : 'N/A', // Description
-            cells[4] ? cells[4].textContent.trim() : 'N/A' // Status
-          ]);
-        }
-      });
-      return data;
-    }
-
-    function generatePrintableTable() {
-      const tableData = getTableData();
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Destination</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      
-      tableData.forEach(row => {
-        html += '<tr>';
-        row.forEach(cell => {
-          html += `<td>${cell}</td>`;
-        });
-        html += '</tr>';
-      });
-      
-      html += '</tbody></table>';
-      return html;
-    }
   </script>
 </body>
 </html>

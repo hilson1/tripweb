@@ -8,7 +8,7 @@
       <span>THANKYOUNEPALTRIP</span>
     </div>
     
-    <nav class="p-4">
+    <nav class="p-4 ">
       <ul class="space-y-2">
         <!-- Dashboard -->
         <li>

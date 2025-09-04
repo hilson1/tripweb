@@ -5,19 +5,19 @@ ini_set('display_errors', 1);
 
 require '../connection.php';
 
-$id = $_GET['id'] ?? null;
+$destination = $_GET['name'] ?? null;
 $error = '';
 $destinationData = [];
 
-// Validate ID parameter
-if (!$id || !is_numeric($id)) {
-    header("Location: alldestination.php?error=invalid_id");
+if (empty($destination)) {
+    header("Location: alldestination.php?error=missing_name");
     exit();
 }
 
+
 // Fetch existing data
-$stmt = $conn->prepare("SELECT * FROM destination WHERE destination_id = ?");
-$stmt->bind_param("i", $id);
+$stmt = $conn->prepare("SELECT * FROM destinations WHERE distination = ?");
+$stmt->bind_param("s", $destination);
 $stmt->execute();
 $result = $stmt->get_result();
 $destinationData = $result->fetch_assoc();
@@ -27,19 +27,15 @@ if (!$destinationData) {
     exit();
 }
 
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get and validate form data
-    $destination = trim($_POST['destination']);
+    $destination = trim($_POST['destination']);  // new name
     $description = trim($_POST['description']);
-    $status = strtolower(trim($_POST['status'] ?? 'active'));
-    
-    // Validate status
-    if (!in_array($status, ['active', 'inactive'])) {
-        $status = 'active';
-    }
+    $oldName = $_POST['old_name']; // store the old name from hidden input
+
     
     // Handle image upload if new image is provided
-    $imagePath = $destinationData['dest_image'];
+    $imagePath = $destinationData['main_image'];
     if (isset($_FILES['dest_image']) && $_FILES['dest_image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../assets/destinations/';
         if (!file_exists($uploadDir)) {
@@ -77,30 +73,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Only proceed if no errors
     if (empty($error)) {
-        error_log("Attempting to update destination: $destination, $description, $imagePath, $status, $id");
-        
-        $stmt = $conn->prepare("UPDATE destination SET destination = ?, description = ?, dest_image = ?, status = ? WHERE destination_id = ?");
-        if ($stmt) {
-            $stmt->bind_param("ssssi", $destination, $description, $imagePath, $status, $id);
-            
-            if ($stmt->execute()) {
-                error_log("Update successful");
-                header("Location: alldestination.php?success=1");
-                exit();
+            $stmt = $conn->prepare("UPDATE destinations 
+                                    SET distination = ?, description = ?, main_image = ? 
+                                    WHERE distination = ?");
+            if ($stmt) {
+                $stmt->bind_param("ssss", $destination, $description, $imagePath, $oldName);
+
+                if ($stmt->execute()) {
+                    header("Location: alldestination.php?success=1");
+                    exit();
+                } else {
+                    $error = "Error updating destination: " . $stmt->error;
+                }
+                $stmt->close();
             } else {
-                error_log("Update failed: " . $stmt->error);
-                $error = "Error updating destination: " . $stmt->error;
+                $error = "Database error: " . $conn->error;
             }
-            
-            $stmt->close();
-        } else {
-            error_log("Prepare failed: " . $conn->error);
-            $error = "Database error: " . $conn->error;
         }
     }
     
     $conn->close();
-}
 ?>
 
 <!DOCTYPE html>
@@ -139,31 +131,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           </div>
         </div>
 
-        <?php if (isset($error)): ?>
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <?php echo $error; ?>
-          </div>
-        <?php endif; ?>
+       <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?name=' . urlencode($destination); ?>" 
+              method="post" enctype="multipart/form-data">
+        <input type="hidden" name="old_name" value="<?php echo htmlspecialchars($destination); ?>">
 
-        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?id=' . $id; ?>" method="post" enctype="multipart/form-data" class="glass-effect rounded-2xl shadow-xl p-6" onsubmit="return validateForm()">
-          <input type="hidden" name="id" value="<?php echo $id; ?>">
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="form-group">
               <label class="block text-gray-700 mb-2 font-medium">Destination Name *</label>
               <input type="text" name="destination" id="destination" required 
-                     value="<?php echo htmlspecialchars($destinationData['destination']); ?>"
+                     value="<?php echo htmlspecialchars($destinationData['distination']); ?>"
                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label class="block text-gray-700 mb-2 font-medium">Status *</label>
               <select name="status" id="status" required
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="active" <?php echo $destinationData['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
-                <option value="inactive" <?php echo $destinationData['status'] == 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                <option value="active" >Active</option>
+                <option value="inactive" >Inactive</option>
               </select>
-            </div>
+            </div> -->
             
             <div class="md:col-span-2 form-group">
               <label class="block text-gray-700 mb-2 font-medium">Description *</label>
@@ -188,8 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             <div class="flex items-center">
               <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                <?php if (!empty($destinationData['dest_image'])): ?>
-                  <img id="currentImage" src="../<?php echo htmlspecialchars($destinationData['dest_image']); ?>" 
+                <?php if (!empty($destinationData['main_image'])): ?>
+                  <img id="currentImage" src="../<?php echo htmlspecialchars($destinationData['main_image']); ?>" 
                        alt="Current Image" class="w-full h-full object-cover">
                 <?php else: ?>
                   <i class="fas fa-image text-gray-400 text-3xl" id="placeholderIcon"></i>

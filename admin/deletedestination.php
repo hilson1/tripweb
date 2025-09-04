@@ -1,16 +1,16 @@
 <?php
 require '../connection.php';
 
-$id = $_GET['id'] ?? null;
+$destination_name = $_GET['name'] ?? null;
 
-if (!$id) {
+if (!$destination_name) {
     header("Location: alldestination.php");
     exit();
 }
 
 // First get the image path to delete the file
-$stmt = $conn->prepare("SELECT dest_image FROM destination WHERE destination_id = ?");
-$stmt->bind_param("i", $id);
+$stmt = $conn->prepare("SELECT main_image FROM destinations WHERE distination = ?");
+$stmt->bind_param("s", $destination_name);
 $stmt->execute();
 $result = $stmt->get_result();
 $destination = $result->fetch_assoc();
@@ -22,8 +22,8 @@ if ($destination) {
     }
     
     // Delete the record from database
-    $stmt = $conn->prepare("DELETE FROM destination WHERE destination_id = ?");
-    $stmt->bind_param("i", $id);
+    $stmt = $conn->prepare("DELETE FROM destinations WHERE distination = ?");
+    $stmt->bind_param("s", $destination_name);
     
     if ($stmt->execute()) {
         header("Location: alldestination.php?success=1&message=Destination+deleted+successfully");
