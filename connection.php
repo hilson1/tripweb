@@ -8,8 +8,8 @@ error_reporting(E_ALL);
 $servername = "localhost"; // Change if needed
 $username = "root"; // Your database username
 $password = ""; // Your database password
-$database = "tripnepal"; // Your database name
-$Port = 3310;
+$database = "tripnepal2"; // Your database name
+$port = 4306;
 
 
 // Create a connection

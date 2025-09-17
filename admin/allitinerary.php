@@ -77,25 +77,19 @@ $result = $stmt->get_result();
         <div class="bg-red-100 text-red-700 p-3 rounded mb-4"><?= htmlspecialchars($delete_error) ?></div>
       <?php endif; ?>
 
-      <!-- Search & Entries -->
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-3 sm:space-y-0 w-full">
-        <div class="w-full sm:w-auto">
-          <label class="flex items-center space-x-2">
-            <span>Show</span>
-            <select id="entries" class="border rounded p-1 w-full sm:w-20" onchange="changeEntries()">
-              <option value="5">5</option>
-              <option value="10" selected>10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-            </select>
-            <span>entries</span>
-          </label>
+        <!-- Search and Add Button Section -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <div class="w-full md:w-1/3">
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              <input type="text" id="searchInput" placeholder="Search itineraries..."
+                     class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+          </div>
+          <a href="itineray.php" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center shadow-lg">
+            <i class="fas fa-plus mr-2"></i>Add New Itinerary
+          </a>
         </div>
-        <div class="w-full sm:w-64">
-          <input type="text" id="search" onkeyup="searchTable()" placeholder="Search..." 
-                 class="border rounded p-2 w-full">
-        </div>
-      </div>
 
       <!-- Table Card -->
       <div class="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -161,6 +155,8 @@ $result = $stmt->get_result();
   </main>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
+
+
   // Delete Confirmation
   function confirmDelete(event, formElement) {
     event.preventDefault();
@@ -198,19 +194,16 @@ $result = $stmt->get_result();
     currentPage = 1;
     updateTable();
   }
-
-  function searchTable() {
-    const searchTerm = document.getElementById('search').value.toLowerCase();
-    filteredRows = searchTerm === ''
-      ? [...allRows]
-      : allRows.filter(row =>
-          Array.from(row.cells).some(cell =>
-            cell.textContent.toLowerCase().includes(searchTerm)
-          )
-        );
+  document.getElementById('searchInput').addEventListener('input', function() {
+    const query = this.value.toLowerCase();
+    filteredRows = allRows.filter(row => {
+      return Array.from(row.cells).some(cell => 
+        cell.textContent.toLowerCase().includes(query)
+      );
+    });
     currentPage = 1;
     updateTable();
-  }
+  }); 
 
   function updateTable() {
     // Hide all rows first

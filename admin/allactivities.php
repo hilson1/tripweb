@@ -87,6 +87,19 @@ $result = $stmt->get_result();
           </div>
         </div>
 
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <div class="w-full md:w-1/3">
+            <div class="relative">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              <input type="text" id="searchInput" placeholder="Search activity..."
+                     class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+          </div>
+          <a href="createactivities.php" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center shadow-lg">
+            <i class="fas fa-plus mr-2"></i>Add New Activity
+          </a>
+        </div>
+
 
         <!-- Table Section -->
         <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
@@ -214,6 +227,18 @@ $result = $stmt->get_result();
           });
         }
       }));
+    });
+
+    //Search Functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+      filteredRows = allRows.filter(row => {
+        return Array.from(row.cells).some(cell => 
+          cell.textContent.toLowerCase().includes(query)
+        );
+      });
+      currentPage = 1;
+      updateTable();
     });
 
     // Table functionality

@@ -41,25 +41,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function () {
-                    const dropdownMenu = this.nextElementSibling;
-                    dropdownMenu.classList.toggle('hidden');
-                });
-            });
-        });
-    </script>
+    <link rel="stylesheet" href="frontend/sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
     <div class="flex h-screen">
         <!-- Sidebar -->
         <?php
-        include("frontend/asidebar.php");
+        include("frontend/header.php");
+        ?>
+
+        <?php
+        include("frontend/sidebar.php");
         ?>
         <!-- Main Content -->
         <div class="ml-64 p-6 w-full mt-16">
