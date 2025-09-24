@@ -1,59 +1,65 @@
 <?php
 include("frontend/session_start.php");
-?>
-<?php
-require 'connection.php'; // Include database connection
+require 'connection.php';
+require 'send_email.php';
+
 $SuccessMsg = "";
 $FailMsg = "";
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get form data
 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone']);
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
-
-    // Validate inputs
-    // Check if email already exists
-    $checkEmail = "SELECT email FROM users WHERE email = ?";
-    $stmt = $conn->prepare($checkEmail);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $stmt->store_result();
-
-    if ($stmt->num_rows > 0) {
-        $FailMsg = "Email already exists ! Use different email";
-        $stmt->close();
-        $conn->close();
+    
+    // Validate inputs (client-side validation is good, but server-side is essential)
+    if (empty($email) || empty($phone) || empty($username) || empty($password)) {
+        $FailMsg = "All fields are required.";
     } else {
+        // Check if email already exists
+        $checkEmail = "SELECT email FROM users WHERE email = ?";
+        $stmt = $conn->prepare($checkEmail);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
 
-        // Generate a unique user ID
-        $userid = uniqid('user_');
-
-        // Hash the password for security
-        $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-
-        // Insert user data into the database
-        $sql = "INSERT INTO users (userid, phone_number, email, user_name, password) VALUES (?,?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssss", $userid, $phone, $email, $username, $hashed_password);
-
-        if ($stmt->execute()) {
-            $SuccessMsg = "Signup successful!";
-            header('location:login.php');
+        if ($stmt->num_rows > 0) {
+            $FailMsg = "Email already exists! Use a different email.";
+            $stmt->close();
+            $conn->close();
         } else {
-            $FailMsg = "Signup unsuccessful!";
-        }
+            // Generate a random OTP
+            $otp = rand(100000, 999999);
 
-        $stmt->close();
-        $conn->close();
+            // Store user data and OTP in the session
+            $_SESSION['signup_data'] = [
+                'email' => $email,
+                'phone' => $phone,
+                'username' => $username,
+                'password' => password_hash($password, PASSWORD_BCRYPT), // Hash password before storing
+                'otp' => $otp
+            ];
+
+            // Send OTP to the user's email
+            if (sendOtpEmail($email, $otp)) {
+                // Redirect to OTP verification page
+                header('location: verify_otp.php');
+                exit();
+            } else {
+                $FailMsg = "Failed to send OTP. Please try again.";
+            }
+
+            $stmt->close();
+            $conn->close();
+        }
     }
 }
+
+// HTML and CSS remain the same as in your original file
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,7 +77,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
-
         }
 
         .login-container h2 {
@@ -172,9 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 
-<?php
-include("frontend/header.php");
-?>
+<?php include("frontend/header.php"); ?>
 <div class="login-container">
     <h2>Signup</h2>
     <form id="loginForm" method="post">
@@ -191,9 +194,9 @@ include("frontend/header.php");
         <label for="password">Password <span style="color:red;">*</span></label>
         <input type="password" id="password" name="password" placeholder="Password" required>
         <div id="passwordError" class="error"></div>
-        <label for="password">Confirm Password <span style="color:red;">*</span></label>
+        <label for="cpassword">Confirm Password <span style="color:red;">*</span></label>
         <input type="password" id="cpassword" name="cpassword" placeholder="Confirm Password" required>
-        <div id="passwordError" class="error"></div>
+        <div id="cpasswordError" class="error"></div>
         <button type="submit" class="login-button">SIGN UP</button>
     </form>
     <div class="signup">
@@ -201,24 +204,19 @@ include("frontend/header.php");
     </div>
 </div>
 
-
-
 <?php
 include("frontend/footer.php");
-?>
-<?php
 include("frontend/scrollup.html");
 ?>
 <script>
     document.getElementById('loginForm').addEventListener('submit', function (event) {
         let isValid = true;
-
-        // Clear previous error messages
+        
         document.getElementById('emailError').textContent = '';
         document.getElementById('usernameError').textContent = '';
         document.getElementById('passwordError').textContent = '';
+        document.getElementById('cpasswordError').textContent = '';
 
-        // Validate Email
         const email = document.getElementById('email').value.trim();
         if (!email) {
             document.getElementById('emailError').textContent = 'Email is required.';
@@ -228,7 +226,6 @@ include("frontend/scrollup.html");
             isValid = false;
         }
 
-        // Validate Username
         const username = document.getElementById('username').value.trim();
         if (!username) {
             document.getElementById('usernameError').textContent = 'Username is required.';
@@ -238,7 +235,6 @@ include("frontend/scrollup.html");
             isValid = false;
         }
 
-        // Validate Password
         const password = document.getElementById('password').value.trim();
         const cpassword = document.getElementById('cpassword').value.trim();
         if (!password) {
@@ -247,11 +243,11 @@ include("frontend/scrollup.html");
         } else if (password.length < 6) {
             document.getElementById('passwordError').textContent = 'Password must be at least 6 characters long.';
             isValid = false;
-        } else if (cpassword != password) {
-            document.getElementById('passwordError').textContent = 'Password does not match !';
+        } else if (cpassword !== password) {
+            document.getElementById('cpasswordError').textContent = 'Passwords do not match.';
             isValid = false;
         }
-        // Prevent form submission if validation fails
+
         if (!isValid) {
             event.preventDefault();
         }
@@ -260,5 +256,4 @@ include("frontend/scrollup.html");
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

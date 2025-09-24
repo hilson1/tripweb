@@ -7,8 +7,8 @@ error_reporting(E_ALL);
 $servername = "localhost";
 $username   = "root"; // MySQL username
 $password   = ""; // AMPPS default password
-$database   = "tripnepal2"; // Your database name
-$port       = 4306;
+$database   = "tripnepal"; // Your database name
+$port       = 3310;
 
 // Create a connection
 $conn = new mysqli($servername, $username, $password, $database, $port);

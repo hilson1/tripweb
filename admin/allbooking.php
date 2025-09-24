@@ -1,8 +1,8 @@
 <?php
 require '../connection.php';
- 
-// Get fresh data for display
-$stmt = $conn->prepare("SELECT * FROM users ORDER BY userid DESC");
+
+// Get fresh data from the trip_booking table
+$stmt = $conn->prepare("SELECT * FROM trip_booking ORDER BY id ");
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -14,10 +14,8 @@ $result = $stmt->get_result();
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin Dashboard - ThankYouNepalTrip</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -27,21 +25,15 @@ $result = $stmt->get_result();
 </head>
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
-  <!-- Overlay for mobile sidebar -->
   <div class="overlay" :class="{ 'open': sidebarOpen }" @click="sidebarOpen = false"></div>
 
-  <!-- Top Navigation Bar -->
   <?php include 'frontend/header.php'; ?>
 
-  <!-- Sidebar -->
   <?php include 'frontend/sidebar.php'; ?>
 
-  <!-- Main Content Area -->
   <main class="main-content pt-16 min-h-screen transition-all duration-300">
     <div class="p-6">
-      <!-- Users Management Content -->
       <div class="bg-white rounded-xl shadow-md p-6">
-        <!-- Header Section -->
         <div class="mb-8">
           <div class="gradient-bg rounded-2xl p-6 text-white">
             <div class="flex justify-between items-center">
@@ -49,119 +41,109 @@ $result = $stmt->get_result();
                 <h1 class="text-3xl font-bold mb-2">
                   <i class="fas fa-bookmark mr-3"></i>Booking Management
                 </h1>
-                <p class="text-blue-100">Manage and monitor all Booking</p>
+                <p class="text-blue-100">Manage and monitor all bookings</p>
               </div>
               <div class="text-right">
-                <div class="text-2xl font-bold" id="totalUsers">
+                <div class="text-2xl font-bold" id="totalEntriesDisplay">
                   <?php echo $result->num_rows; ?>
                 </div>
-                <div class="text-blue-100">Total Booking</div>
+                <div class="text-blue-100">Total Bookings</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Export Buttons -->
         <?php include 'frontend/exportdata.php'; ?>
 
-        <!-- Table Section -->
         <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
           <div class="overflow-x-auto custom-scrollbar">
-            <table class="min-w-full" id="usersTable">
+            <table class="min-w-full" id="data-table">
               <thead class="gradient-bg text-white">
                 <tr>
-                  <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-id-card mr-2"></i>User ID
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-user mr-2"></i>Name
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
-                    <i class="fas fa-at mr-2"></i>Username
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
-                    <i class="fas fa-envelope mr-2"></i>Email
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
-                    <i class="fas fa-phone mr-2"></i>Phone
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold hidden-mobile">
-                    <i class="fas fa-map-marker-alt mr-2"></i>Location
-                  </th>
-                  <th class="py-4 px-6 text-left font-semibold">
-                    <i class="fas fa-info-circle mr-2"></i>Status
-                  </th>
+                  <th class="py-4 px-6 text-left font-semibold"><i class="fas fa-fingerprint mr-2"></i>ID</th>
+                  <th class="py-4 px-6 text-left font-semibold"><i class="fas fa-signature mr-2"></i>Full Name</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-route mr-2"></i>Trip Name</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-envelope mr-2"></i>Email</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-phone mr-2"></i>Phone</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-calendar-alt mr-2"></i>Arrival Date</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-calendar-check mr-2"></i>Departure Date</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-users mr-2"></i>Guests</th>
+                  <th class="py-4 px-6 text-left font-semibold"><i class="fas fa-money-check-alt mr-2"></i>Payment Status</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-credit-card mr-2"></i>Payment Mode</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <?php
                 if ($result->num_rows > 0) {
-                  while ($user = $result->fetch_assoc()) {
-                    $statusClass = '';
-                    $statusText = '';
-                    switch($user['status']) {
-                      case 'active':
-                        $statusClass = 'status-active';
-                        $statusText = 'Active';
+                  while ($booking = $result->fetch_assoc()) {
+                    $paymentStatusClass = '';
+                    $paymentStatusText = '';
+                    switch(strtolower($booking['payment_status'])) {
+                      case 'completed':
+                        $paymentStatusClass = 'bg-green-500';
+                        $paymentStatusText = 'Completed';
                         break;
-                      case 'inactive':
-                        $statusClass = 'status-inactive';
-                        $statusText = 'Inactive';
+                      case 'pending':
+                        $paymentStatusClass = 'bg-yellow-500';
+                        $paymentStatusText = 'Pending';
                         break;
-                      case 'suspended':
-                        $statusClass = 'status-suspended';
-                        $statusText = 'Suspended';
+                      case 'failed':
+                        $paymentStatusClass = 'bg-red-500';
+                        $paymentStatusText = 'Failed';
                         break;
                       default:
-                        $statusClass = 'bg-gray-500';
-                        $statusText = 'Unknown';
+                        $paymentStatusClass = 'bg-gray-500';
+                        $paymentStatusText = 'Unknown';
                     }
                 ?>
                 <tr class="table-row hover:bg-gray-50">
                   <td class="py-4 px-6">
-                    <div class="flex items-center">
-                      <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                        <?php echo strtoupper(substr($user["first_name"], 0, 1) . substr($user["last_name"], 0, 1)); ?>
-                      </div>
-                      <span class="font-mono text-sm text-gray-600"><?php echo htmlspecialchars($user["userid"]); ?></span>
-                    </div>
+                    <span class="font-mono text-sm text-gray-600"><?php echo htmlspecialchars($booking["id"]); ?></span>
                   </td>
                   <td class="py-4 px-6">
-                    <div>
-                      <div class="font-semibold text-gray-900">
-                        <?php echo htmlspecialchars($user["first_name"] . " " . $user["last_name"]); ?>
-                      </div>
-                      <div class="text-sm text-gray-500 lg:hidden">
-                        @<?php echo htmlspecialchars($user["user_name"]); ?>
-                      </div>
+                    <div class="font-semibold text-gray-900">
+                      <?php echo htmlspecialchars($booking["full_name"]); ?>
                     </div>
                   </td>
                   <td class="py-4 px-6 hidden-mobile">
-                    <span class="text-gray-700">@<?php echo htmlspecialchars($user["user_name"]); ?></span>
+                    <span class="text-gray-700"><?php echo htmlspecialchars($booking["trip_name"]); ?></span>
                   </td>
                   <td class="py-4 px-6 hidden-mobile">
-                    <a href="mailto:<?php echo htmlspecialchars($user["email"]); ?>" 
+                    <a href="mailto:<?php echo htmlspecialchars($booking["email"]); ?>" 
                        class="text-blue-600 hover:text-blue-800 transition-colors">
-                      <?php echo htmlspecialchars($user["email"]); ?>
+                      <?php echo htmlspecialchars($booking["email"]); ?>
                     </a>
                   </td>
                   <td class="py-4 px-6 hidden-mobile">
-                    <a href="tel:<?php echo htmlspecialchars($user["phone_number"]); ?>" 
+                    <a href="tel:<?php echo htmlspecialchars($booking["phone_number"]); ?>" 
                        class="text-green-600 hover:text-green-800 transition-colors">
-                      <?php echo htmlspecialchars($user["phone_number"] ?: 'N/A'); ?>
+                      <?php echo htmlspecialchars($booking["phone_number"] ?: 'N/A'); ?>
                     </a>
                   </td>
                   <td class="py-4 px-6 hidden-mobile">
                     <div class="text-sm">
-                      <div><?php echo htmlspecialchars($user["address"] ?: 'N/A'); ?></div>
-                      <?php if ($user["country"]): ?>
-                        <div class="text-gray-500"><?php echo htmlspecialchars($user["country"]); ?></div>
-                      <?php endif; ?>
+                      <div><?php echo htmlspecialchars($booking["arrival_date"]); ?></div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6 hidden-mobile">
+                    <div class="text-sm">
+                      <div><?php echo htmlspecialchars($booking["departure_date"]); ?></div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6 hidden-mobile">
+                    <div class="text-sm text-gray-700">
+                      Adults: <?php echo htmlspecialchars($booking["adults"]); ?> <br>
+                      Children: <?php echo htmlspecialchars($booking["children"]); ?>
                     </div>
                   </td>
                   <td class="py-4 px-6">
-                    <span class="<?php echo $statusClass; ?> text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      <?php echo $statusText; ?>
+                    <span class="<?php echo $paymentStatusClass; ?> text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      <?php echo $paymentStatusText; ?>
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 hidden-mobile">
+                    <span class="text-gray-700">
+                      <?php echo htmlspecialchars($booking["payment_mode"] ?: 'N/A'); ?>
                     </span>
                   </td>
                 </tr>
@@ -170,9 +152,9 @@ $result = $stmt->get_result();
                 } else {
                 ?>
                 <tr>
-                  <td colspan="8" class="py-8 px-6 text-center text-gray-500">
-                    <i class="fas fa-users-slash text-4xl mb-4 block"></i>
-                    <p class="text-lg">No users found</p>
+                  <td colspan="10" class="py-8 px-6 text-center text-gray-500">
+                    <i class="fas fa-bookmark-slash text-4xl mb-4 block"></i>
+                    <p class="text-lg">No bookings found</p>
                   </td>
                 </tr>
                 <?php } ?>
@@ -180,15 +162,13 @@ $result = $stmt->get_result();
             </table>
           </div>
 
-          <!-- Pagination -->
           <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <div class="flex items-center justify-between">
               <div class="text-sm text-gray-600">
                 Showing <span id="startEntry">1</span> to <span id="endEntry">10</span> of <span id="totalEntries"><?php echo $result->num_rows; ?></span> entries
               </div>
               <div class="flex space-x-2" id="pagination">
-                <!-- Pagination buttons will be generated by JavaScript -->
-              </div>
+                </div>
             </div>
           </div>
         </div>
@@ -196,7 +176,6 @@ $result = $stmt->get_result();
     </div>
   </main>
 
-  <!-- Alpine JS for dropdown functionality -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   
   <script>
@@ -206,12 +185,10 @@ $result = $stmt->get_result();
         sidebarOpen: window.innerWidth >= 1024,
         
         init() {
-          // Close sidebar on mobile by default
           if (window.innerWidth < 1024) {
             this.sidebarOpen = false;
           }
           
-          // Update state when window is resized
           window.addEventListener('resize', () => {
             if (window.innerWidth >= 1024) {
               this.sidebarOpen = true;
@@ -227,9 +204,8 @@ $result = $stmt->get_result();
     let allRows = [];
     let filteredRows = [];
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-      allRows = Array.from(document.querySelectorAll('#usersTable tbody tr')).filter(row => 
+      allRows = Array.from(document.querySelectorAll('#data-table tbody tr')).filter(row => 
         !row.querySelector('td[colspan]')
       );
       filteredRows = [...allRows];
@@ -261,27 +237,22 @@ $result = $stmt->get_result();
     }
 
     function updateTable() {
-      // Hide all rows
       allRows.forEach(row => row.style.display = 'none');
       
-      // Calculate pagination
       const totalEntries = filteredRows.length;
       const startIndex = (currentPage - 1) * entriesPerPage;
       const endIndex = Math.min(startIndex + entriesPerPage, totalEntries);
       
-      // Show relevant rows
       for (let i = startIndex; i < endIndex; i++) {
         if (filteredRows[i]) {
           filteredRows[i].style.display = '';
         }
       }
       
-      // Update pagination info
       document.getElementById('startEntry').textContent = totalEntries > 0 ? startIndex + 1 : 0;
       document.getElementById('endEntry').textContent = endIndex;
       document.getElementById('totalEntries').textContent = totalEntries;
       
-      // Update pagination buttons
       updatePagination(totalEntries);
     }
 
@@ -292,30 +263,27 @@ $result = $stmt->get_result();
       
       if (totalPages <= 1) return;
       
-      // Previous button
       if (currentPage > 1) {
         paginationDiv.innerHTML += `
           <button onclick="changePage(${currentPage - 1})" 
-                  class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             <i class="fas fa-chevron-left"></i>
           </button>`;
       }
       
-      // Page numbers
       for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
         const activeClass = i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50';
         paginationDiv.innerHTML += `
           <button onclick="changePage(${i})" 
-                  class="px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors ${activeClass}">
+                    class="px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors ${activeClass}">
             ${i}
           </button>`;
       }
       
-      // Next button
       if (currentPage < totalPages) {
         paginationDiv.innerHTML += `
           <button onclick="changePage(${currentPage + 1})" 
-                  class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             <i class="fas fa-chevron-right"></i>
           </button>`;
       }
@@ -335,7 +303,7 @@ $result = $stmt->get_result();
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Users Report</title>
+          <title>Booking Report</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             h1 { color: #333; text-align: center; margin-bottom: 30px; }
@@ -348,7 +316,7 @@ $result = $stmt->get_result();
         </head>
         <body>
           <div class="print-date">Generated on: ${new Date().toLocaleString()}</div>
-          <h1>Users Report</h1>
+          <h1>Booking Report</h1>
           ${tableHTML}
         </body>
         </html>
@@ -362,20 +330,16 @@ $result = $stmt->get_result();
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('l', 'mm', 'a4'); // landscape orientation
       
-      // Add title
       doc.setFontSize(18);
-      doc.text('Users Report', 14, 22);
+      doc.text('Booking Report', 14, 22);
       
-      // Add date
       doc.setFontSize(10);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 32);
       
-      // Get table data
       const tableData = getTableData();
       
-      // Generate PDF table
       doc.autoTable({
-        head: [['User ID', 'Name', 'Username', 'Email', 'Phone', 'Country', 'Status']],
+        head: [['ID', 'Full Name', 'Trip Name', 'Email', 'Phone', 'Arrival', 'Departure', 'Adults', 'Children', 'Payment Status', 'Payment Mode']],
         body: tableData,
         startY: 40,
         styles: {
@@ -392,20 +356,20 @@ $result = $stmt->get_result();
         }
       });
       
-      doc.save('users-report.pdf');
+      doc.save('booking-report.pdf');
     }
 
     function exportToExcel() {
       const tableData = getTableData();
       const ws = XLSX.utils.aoa_to_sheet([
-        ['User ID', 'Name', 'Username', 'Email', 'Phone', 'Country', 'Status'],
+        ['ID', 'Full Name', 'Trip Name', 'Email', 'Phone', 'Arrival Date', 'Departure Date', 'Adults', 'Children', 'Payment Status', 'Payment Mode'],
         ...tableData
       ]);
       
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Users');
+      XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
       
-      XLSX.writeFile(wb, 'users-report.xlsx');
+      XLSX.writeFile(wb, 'booking-report.xlsx');
     }
 
     function getTableData() {
@@ -414,13 +378,17 @@ $result = $stmt->get_result();
         const cells = row.querySelectorAll('td');
         if (cells.length > 0) {
           data.push([
-            cells[0].textContent.trim().split('\n').pop(), // User ID
-            cells[1].textContent.trim().split('\n')[0], // Name
-            cells[2] ? cells[2].textContent.trim() : 'N/A', // Username
-            cells[3] ? cells[3].textContent.trim() : 'N/A', // Email
-            cells[4] ? cells[4].textContent.trim() : 'N/A', // Phone
-            cells[5] ? cells[5].textContent.trim().split('\n').pop() || 'N/A' : 'N/A', // Country
-            cells[6] ? cells[6].textContent.trim() : 'N/A' // Status
+            cells[0].textContent.trim(), // ID
+            cells[1].textContent.trim(), // Full Name
+            cells[2].textContent.trim(), // Trip Name
+            cells[3].textContent.trim(), // Email
+            cells[4].textContent.trim(), // Phone
+            cells[5].textContent.trim(), // Arrival Date
+            cells[6].textContent.trim(), // Departure Date
+            cells[7].textContent.trim().split('Adults: ')[1].split(' ')[0], // Adults
+            cells[7].textContent.trim().split('Children: ')[1], // Children
+            cells[8].textContent.trim(), // Payment Status
+            cells[9].textContent.trim() // Payment Mode
           ]);
         }
       });
@@ -433,13 +401,17 @@ $result = $stmt->get_result();
         <table>
           <thead>
             <tr>
-              <th>User ID</th>
-              <th>Name</th>
-              <th>Username</th>
+              <th>ID</th>
+              <th>Full Name</th>
+              <th>Trip Name</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Country</th>
-              <th>Status</th>
+              <th>Arrival Date</th>
+              <th>Departure Date</th>
+              <th>Adults</th>
+              <th>Children</th>
+              <th>Payment Status</th>
+              <th>Payment Mode</th>
             </tr>
           </thead>
           <tbody>

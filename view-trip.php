@@ -50,7 +50,7 @@ if (isset($_GET['tripid'])) {
                         style="display: flex; justify-content: space-between; flex-direction:column; flex-wrap: wrap;">
                         <img src="<?php echo $trip['side_image1']; ?>" class="thumbnail" onclick="openModal(1)"
                             style="height: 200px; width: 400px;">
-                        <img src="" <?php echo $trip['side_image2']; ?>"" class="thumbnail" onclick="openModal(2)"
+                        <img src="<?php echo $trip['side_image2']; ?>" class="thumbnail" onclick="openModal(2)"
                             style="height: 200px; width: 400px;">
                     </div>
                 </div>
