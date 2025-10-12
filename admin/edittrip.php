@@ -1,76 +1,54 @@
 <?php
-require'../connection.php';
+require '../connection.php';
+session_start();
 
-$destinations = [];
-$stmt = $conn->prepare("SELECT distination FROM destinations");
-if($stmt->execute()) {
+// Fetch dropdown options
+function getOptions($conn, $table, $column) {
+    $stmt = $conn->prepare("SELECT $column FROM $table");
+    $stmt->execute();
     $result = $stmt->get_result();
-    $destinations = $result->fetch_all(MYSQLI_ASSOC);
+    $data = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
-} else {
-    die("Error fetching destinations: " . $conn->error);
-}
-// Fetch activities for dropdown
-$activities= [];
-$stmt = $conn->prepare("SELECT activity FROM activities");
-if ($stmt->execute()) {
-    $result = $stmt->get_result();
-    $activities = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-} else {
-    die("Error fetching activities: " . $conn->error);
-}
-// Fetch trip types for dropdown
-$triptypes = [];
-$stmt = $conn->prepare("SELECT triptype FROM triptypes");
-if ($stmt->execute()) {
-    $result = $stmt->get_result();
-    $triptypes = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-} else {
-    die("Error fetching trip types: " . $conn->error);
+    return $data;
 }
 
+$destinations = getOptions($conn, 'destinations', 'distination');
+$activities   = getOptions($conn, 'activities', 'activity');
+$triptypes    = getOptions($conn, 'triptypes', 'triptype');
+
+// Validate trip ID
 if (!isset($_GET['id'])) {
     header("Location: alltrip.php");
-    exit();
+    exit;
 }
+$tripId = (int)$_GET['id'];
 
-$tripId = $_GET['id'];
-
-// Fetch trip data with images
-$trip = [];
+// Fetch trip with images
 $stmt = $conn->prepare("
-    SELECT trips.*, trip_images.main_image, trip_images.side_image1, trip_images.side_image2 
-    FROM trips 
-    LEFT JOIN trip_images ON trips.tripid = trip_images.tripid 
-    WHERE trips.tripid = ?
+    SELECT t.*, i.main_image, i.side_image1, i.side_image2 
+    FROM trips t
+    LEFT JOIN trip_images i ON t.tripid = i.tripid
+    WHERE t.tripid = ?
 ");
 $stmt->bind_param("i", $tripId);
-if ($stmt->execute()) {
-    $result = $stmt->get_result();
-    $trip = $result->fetch_assoc();
-    $stmt->close();
-    if (!$trip) die("Trip not found");
-} else {
-    die("Error fetching trip: " . $conn->error);
-}
+$stmt->execute();
+$trip = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
+if (!$trip) die("Trip not found.");
 
-// Handle form submission
+// Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Update main trip data - FIXED parameter binding order
-        $stmt = $conn->prepare("UPDATE trips SET
-            title = ?, price = ?, description = ?, transportation = ?, accomodation = ?,
-            maximumaltitude = ?, departurefrom = ?, bestseason = ?, triptype = ?,
-            meals = ?, language = ?, fitnesslevel = ?, groupsize = ?,
-            minimumage = ?, maximumage = ?, location = ?,
-            duration = ?, activity = ?
-            WHERE tripid = ?
-        ");
-
-        // FIXED: Corrected parameter binding to match the query order
+        // === Update trip fields ===
+        $sql = "UPDATE trips SET 
+            title=?, price=?, description=?, transportation=?, accomodation=?,
+            maximumaltitude=?, departurefrom=?, bestseason=?, triptype=?,
+            meals=?, language=?, fitnesslevel=?, groupsize=?,
+            minimumage=?, maximumage=?, location=?, duration=?, activity=?
+            WHERE tripid=?";
+            
+        $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "sdsssississssiisssi",
             $_POST['title'],
@@ -94,65 +72,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $tripId
         );
 
-        if (!$stmt->execute()) {
-            throw new Exception("Update failed: " . $stmt->error);
-        }
+        if (!$stmt->execute()) throw new Exception($stmt->error);
         $stmt->close();
 
-        // Handle images
-        $uploadDir = __DIR__ . '/../uploads/tripimg/'; // physical path for move_uploaded_file
-        $uploadUrl = '/uploads/tripimg/'; // web URL path to store in DB
+        // === Image Uploads ===
+     $uploadDir = realpath(__DIR__ . '/../uploads/tripimg') . '/';
+        $uploadUrl = 'uploads/tripimg/'; // relative to site root for <img src>
 
-        // Check if images row exists
-        $stmt = $conn->prepare("SELECT * FROM trip_images WHERE tripid = ?");
+
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+        // Ensure trip_images row exists
+        $stmt = $conn->prepare("SELECT 1 FROM trip_images WHERE tripid = ?");
         $stmt->bind_param("i", $tripId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $imageRow = $result->fetch_assoc();
+        $exists = $stmt->get_result()->num_rows > 0;
         $stmt->close();
 
-        if (!$imageRow) {
+        if (!$exists) {
             $stmt = $conn->prepare("INSERT INTO trip_images (tripid) VALUES (?)");
             $stmt->bind_param("i", $tripId);
             $stmt->execute();
             $stmt->close();
         }
 
-        // Process image updates
-        $imageFields = ['main_image', 'side_image1', 'side_image2'];
-        foreach ($imageFields as $field) {
-            if (!empty($_FILES[$field]['name'])) {
-                $fileName = uniqid() . '_' . basename($_FILES[$field]['name']);
+        // Process images
+        foreach (['main_image', 'side_image1', 'side_image2'] as $field) {
+            if (!empty($_FILES[$field]['name']) && $_FILES[$field]['error'] === UPLOAD_ERR_OK) {
+                $ext = pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION);
+                $fileName = uniqid($field . '_') . '.' . strtolower($ext);
                 $targetPath = $uploadDir . $fileName;
-                $targetUrl = $uploadUrl . $fileName;
-                
-            if (move_uploaded_file($_FILES[$field]['tmp_name'], $targetPath)) {
-                $stmt = $conn->prepare("UPDATE trip_images SET $field = ? WHERE tripid = ?");
-                $stmt->bind_param("si", $targetUrl, $tripId); // store URL in DB, not file path
-                $stmt->execute();
-                $stmt->close();
-            }
-            }
-            
-            // Handle deletions
-            if (isset($_POST['deleted_images']) && 
-                in_array($field, explode(',', $_POST['deleted_images']))) {
-                $stmt = $conn->prepare("UPDATE trip_images SET $field = NULL WHERE tripid = ?");
-                $stmt->bind_param("i", $tripId);
-                $stmt->execute();
-                $stmt->close();
+                $targetUrl = $uploadUrl . $fileName; // stored in DB
+
+                if (move_uploaded_file($_FILES[$field]['tmp_name'], $targetPath)) {
+                    $stmt = $conn->prepare("UPDATE trip_images SET $field = ? WHERE tripid = ?");
+                    $stmt->bind_param("si", $targetUrl, $tripId);
+                    $stmt->execute();
+                    $stmt->close();
+                }
             }
         }
 
-        $_SESSION['success'] = "Trip updated successfully!";
+        // Handle image deletions
+        if (!empty($_POST['deleted_images'])) {
+            $toDelete = explode(',', $_POST['deleted_images']);
+            foreach ($toDelete as $field) {
+                $field = trim($field);
+                if (in_array($field, ['main_image', 'side_image1', 'side_image2'])) {
+                    $stmt = $conn->prepare("UPDATE trip_images SET $field = NULL WHERE tripid = ?");
+                    $stmt->bind_param("i", $tripId);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            }
+        }
+
+        $_SESSION['success'] = "Trip updated successfully.";
         header("Location: alltrip.php");
-        exit();
+        exit;
 
     } catch (Exception $e) {
-        $error = $e->getMessage();
+        $error = "Update failed: " . $e->getMessage();
     }
 }
 ?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -163,8 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="frontend/sidebar.css">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    
-    <style>
+        <style>
         .table-container {
             max-height: 600px;
             overflow-y: auto;
@@ -262,6 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
     </style>
+
 
 </head>
 

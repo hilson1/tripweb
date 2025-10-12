@@ -8,9 +8,16 @@ $result = $stmt->get_result();
 // Handle POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tripid = $_POST['tripid'];
-    $uploadDir = '../uploads/tripimg/';
 
-    // Upload function with image validation
+    // Correct upload directory path (root/assets/trips)
+    $uploadDir = __DIR__ . '/../assets/trips/';
+
+    // Auto-create folder if missing
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    // Upload function
     function uploadFile($fileInputName, $uploadDir)
     {
         if (isset($_FILES[$fileInputName]) && $_FILES[$fileInputName]['error'] === UPLOAD_ERR_OK) {
@@ -19,29 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fileSize = $_FILES[$fileInputName]['size'];
             $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
             $allowed = ['jpg', 'jpeg', 'png'];
-            // Validate extension and size
+
             if (in_array($fileExt, $allowed) && $fileSize < 5000000) {
-                // Optional: check if it's a valid image
                 if (getimagesize($fileTmp) === false) {
                     return null;
                 }
                 $newFileName = uniqid('', true) . '.' . $fileExt;
                 $fileDestination = $uploadDir . $newFileName;
 
+                // Move uploaded file
                 if (move_uploaded_file($fileTmp, $fileDestination)) {
-                    return 'uploads/tripimg/' . $newFileName;
+                    // Return relative URL (for database)
+                    return 'assets/trips/' . $newFileName;
                 }
             }
         }
         return null;
     }
 
-    // Upload images
+    // Upload all three images
     $image1Path = uploadFile('image1', $uploadDir);
     $image2Path = uploadFile('image2', $uploadDir);
     $image3Path = uploadFile('image3', $uploadDir);
 
-    // Store in database
+    // Save to database
     if ($image1Path && $image2Path && $image3Path) {
         $stmt = $conn->prepare("INSERT INTO trip_images (tripid, main_image, side_image1, side_image2) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("isss", $tripid, $image1Path, $image2Path, $image3Path);
@@ -56,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "<script>alert('One or more images failed to upload.');</script>";
     }
 }
+
 
 $conn->close();
 ?>

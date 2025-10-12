@@ -1,84 +1,80 @@
+<?php
+require 'frontend/connection.php';
+session_start();
+
+$stmt = $conn->prepare("SELECT name, email, role, profile_image FROM admins WHERE id = ?");
+$stmt->bind_param("i", $_SESSION['admin_id']);
+$stmt->execute();
+$admin = $stmt->get_result()->fetch_assoc();
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Profile - Travel Monster</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-        <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <style>
-        .profile-card {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            text-align: center;
-        }
-        .profile-card img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .stats-card {
-            background-color: #ecf0f1;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .stats-card h3 {
-            font-size: 1.25rem;
-        }
-    </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function () {
-                    const dropdownMenu = this.nextElementSibling;
-                    dropdownMenu.classList.toggle('hidden');
-                });
-            });
-        });
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Profile - ThankYouNepalTrip</title>
+
+  <!-- Tailwind CSS & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="frontend/sidebar.css" />
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
+
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
-    <div class="flex h-screen">
-      <?php 
-        include("frontend/asidebar.php");
-        ?>
+  <div class="flex h-screen">
+    <!-- Header and Sidebar -->
+    <?php include("frontend/header.php"); ?>
+    <?php include("frontend/sidebar.php"); ?>
 
-        <!-- Main Content -->
-        <div class="w-3/4 p-6 ml-64"><br><br>
-            <!-- Profile Section -->
-            <div class="profile-card mb-6">
-                <img src="https://via.placeholder.com/150" alt="Admin Avatar">
-                <h2 class="text-2xl font-semibold mt-4">John Doe</h2>
-                <p class="text-gray-500">Admin</p>
-                <div class="flex justify-center mt-4">
-                    <button class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mx-2">Edit Profile</button>
-                    <button class="bg-red-500 text-white p-2 rounded hover:bg-red-600 mx-2">Change Password</button>
-                </div>
-            </div>
+    <main class="main-content pt-16 min-h-screen transition-all duration-300">
+      <div class="p-6">
 
-            <!-- Stats Section -->
-            <div class="grid grid-cols-3 gap-6">
-                <div class="stats-card">
-                    <h3>Total Users</h3>
-                    <p class="text-2xl font-bold">1,245</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Active Users</h3>
-                    <p class="text-2xl font-bold">1,120</p>
-                </div>
-                <div class="stats-card">
-                    <h3>Pending Requests</h3>
-                    <p class="text-2xl font-bold">52</p>
-                </div>
-            </div>
+        <!-- Page Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white flex justify-between items-center">
+          <div>
+            <h1 class="text-3xl font-bold mb-2">
+              <i class="fas fa-user mr-3"></i>Admin Profile
+            </h1>
+            <p class="text-blue-100">View and manage your admin account</p>
+          </div>
+          <a href="index.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+          </a>
         </div>
-    </div>
+
+        <!-- Alert Messages -->
+        <?php if (isset($_SESSION['message'])): ?>
+          <div class="mt-6">
+            <div class="<?php echo (strpos($_SESSION['message'], 'Error') !== false) ? 'bg-red-100 text-red-700 border-red-400' : 'bg-green-100 text-green-700 border-green-400'; ?> border rounded-lg px-4 py-3 shadow-sm">
+              <?php echo htmlspecialchars($_SESSION['message']); ?>
+            </div>
+          </div>
+          <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
+
+        <!-- Profile Card -->
+        <div class="mt-8 bg-white rounded-2xl shadow-xl p-8 text-center">
+          <img src="<?php echo htmlspecialchars($admin['profile_image']); ?>" 
+               alt="Profile Image" 
+               class="w-32 h-32 rounded-full mx-auto mb-4 object-cover shadow-md">
+          <h2 class="text-2xl font-semibold text-gray-800"><?php echo htmlspecialchars($admin['name']); ?></h2>
+          <p class="text-gray-500"><?php echo htmlspecialchars($admin['role']); ?></p>
+          <p class="text-gray-600 mt-1"><i class="fas fa-envelope mr-2 text-blue-500"></i><?php echo htmlspecialchars($admin['email']); ?></p>
+
+          <div class="flex justify-center mt-6 space-x-4">
+            <a href="changepassword.php" 
+               class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg transition">
+              <i class="fas fa-key mr-2"></i>Change Password
+            </a>
+          </div>
+        </div>
+
+     
+
+      </div>
+    </main>
+  </div>
 </body>
 </html>

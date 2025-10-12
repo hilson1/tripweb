@@ -1,6 +1,6 @@
 <?php
 require '../connection.php';
- 
+
 // Get fresh data for display
 $stmt = $conn->prepare("SELECT * FROM users ORDER BY userid DESC");
 $stmt->execute();
@@ -24,6 +24,64 @@ $result = $stmt->get_result();
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="frontend/sidebar.css">
+  
+  <style>
+    .status-active {
+      background-color: #10b981;
+    }
+    .status-inactive {
+      background-color: #6b7280;
+    }
+    .status-suspended {
+      background-color: #ef4444;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    .table-row {
+      transition: all 0.2s ease-in-out;
+    }
+    .table-row:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+    }
+    .overlay.open {
+      display: block;
+    }
+    @media (max-width: 768px) {
+      .hidden-mobile {
+        display: none;
+      }
+    }
+  </style>
 </head>
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
@@ -37,7 +95,7 @@ $result = $stmt->get_result();
   <?php include 'frontend/sidebar.php'; ?>
 
   <!-- Main Content Area -->
-  <main class="main-content pt-16 min-h-screen transition-all duration-300">
+  <main class="main-content pt-16 min-h-screen transition-all duration-300" :class="{ 'lg:ml-64': sidebarOpen }">
     <div class="p-6">
       <!-- Users Management Content -->
       <div class="bg-white rounded-xl shadow-md p-6">
@@ -61,8 +119,51 @@ $result = $stmt->get_result();
           </div>
         </div>
       
-        <!-- Export Buttons -->
-        <?php include 'frontend/exportdata.php'; ?>
+        <!-- Export and Search Section -->
+        <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <!-- Search Box -->
+          <div class="w-full lg:w-auto">
+            <div class="relative">
+              <input type="text" 
+                     id="search" 
+                     placeholder="Search users..." 
+                     class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full lg:w-64"
+                     onkeyup="searchTable()">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Entries and Export Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+            <!-- Entries Select -->
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-gray-600">Show</label>
+              <select id="entries" onchange="changeEntries()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <label class="text-sm text-gray-600">entries</label>
+            </div>
+            
+            <!-- Export Buttons -->
+            <div class="flex gap-2">
+              <button onclick="printTable()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+                <i class="fas fa-print"></i> Print
+              </button>
+              <button onclick="exportToPDF()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+                <i class="fas fa-file-pdf"></i> PDF
+              </button>
+              <button onclick="exportToExcel()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition flex items-center gap-2">
+                <i class="fas fa-file-excel"></i> Excel
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Table Section -->
         <div class="glass-effect rounded-2xl shadow-xl overflow-hidden">
@@ -166,6 +267,23 @@ $result = $stmt->get_result();
                     <span class="<?php echo $statusClass; ?> text-white px-3 py-1 rounded-full text-xs font-semibold">
                       <?php echo $statusText; ?>
                     </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex justify-start space-x-2">
+                     <!-- Edit Button -->
+                      <button onclick="window.editUser(<?php echo $user['userid']; ?>)" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
+                        <i class="fas fa-edit text-xs"></i>
+                        <span>Edit</span>
+                      </button>
+
+                      <!-- Delete Button -->
+                      <button onclick="window.deleteUser(<?php echo $user['userid']; ?>)" 
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
+                        <i class="fas fa-trash text-xs"></i>
+                        <span>Delete</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 <?php 
@@ -459,6 +577,20 @@ $result = $stmt->get_result();
       html += '</tbody></table>';
       return html;
     }
+
+    // Action Functions
+    // Make functions globally available
+    window.editUser = function(userid) {
+      console.log('Editing user:', userid);
+      window.location.href = `edit_user.php?id=${userid}`;
+    };
+
+    window.deleteUser = function(userid) {
+      console.log('Deleting user:', userid);
+      if (confirm('Are you sure you want to delete user ID ' + userid + '? This action cannot be undone.')) {
+        window.location.href = `delete_user.php?id=${userid}`;
+      }
+    };
   </script>
 </body>
 </html>

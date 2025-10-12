@@ -11,17 +11,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $original_name = htmlspecialchars(trim($_POST['original_name']), ENT_QUOTES, 'UTF-8');
         $current_image = htmlspecialchars(trim($_POST['current_image']), ENT_QUOTES, 'UTF-8');
 
-
         if (empty($triptype_name)) throw new Exception("Error: Triptype name is required");
-        if (empty($triptype_desc)) throw new Exception("Error: Triptype desc is required");
+        if (empty($triptype_desc)) throw new Exception("Error: Triptype description is required");
 
-        // Handle file upload
+        // ✅ Correct upload folder (one level above /admin/)
+        $uploadDir = __DIR__ . '/../assets/triptype/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
         $targetFile = $current_image;
+
+        // ✅ Handle image upload
         if (!empty($_FILES['triptype_image']['name'])) {
-            $targetDir = "uploads/";
             $fileName = basename($_FILES["triptype_image"]["name"]);
-            $targetFile = $targetDir . uniqid() . '_' . $fileName;
-            $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+            $newFileName = uniqid() . '_' . $fileName;
+            $targetFilePath = $uploadDir . $newFileName;
+            $relativePath = 'assets/triptype/' . $newFileName;
+            $imageFileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
 
             $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
             if (!in_array($imageFileType, $allowedTypes)) {
@@ -32,21 +39,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Error: File is too large. Max 5MB allowed.");
             }
 
-            if (!move_uploaded_file($_FILES["triptype_image"]["tmp_name"], $targetFile)) {
-                throw new Exception("Error: Error uploading file.");
+            // ✅ Move uploaded file
+            if (!move_uploaded_file($_FILES["triptype_image"]["tmp_name"], $targetFilePath)) {
+                throw new Exception("Error: Unable to save uploaded file. Check folder permissions.");
             }
+
+            // ✅ Delete old image if exists
+            if (!empty($current_image) && file_exists(__DIR__ . '/../' . $current_image)) {
+                unlink(__DIR__ . '/../' . $current_image);
+            }
+
+            // ✅ Save new image path for DB
+            $targetFile = $relativePath;
         }
 
-        // Update query
-        $stmt = $conn->prepare("UPDATE triptypes SET 
-            triptype = ?, description = ?, main_image = ?
-            WHERE triptype = ?");
-        $stmt->bind_param("ssss", 
-            $triptype_name,
-            $triptype_desc,
-            $targetFile,
-            $original_name
-        );
+        // ✅ Update database record
+        $stmt = $conn->prepare("UPDATE triptypes SET triptype = ?, description = ?, main_image = ? WHERE triptype = ?");
+        $stmt->bind_param("ssss", $triptype_name, $triptype_desc, $targetFile, $original_name);
 
         if (!$stmt->execute()) {
             throw new Exception("Error: " . $stmt->error);
@@ -61,31 +70,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: edittriptype.php?name=" . urlencode($triptype_name));
         exit();
     }
-}
-
- else {
+} else {
     if (isset($_GET['name'])) {
         $triptype_name = htmlspecialchars(trim($_GET['name']), ENT_QUOTES, 'UTF-8');
-        
-        if ($triptype_name) {
-            $stmt = $conn->prepare("SELECT * FROM triptypes WHERE triptype = ?");
-            $stmt->bind_param("s", $triptype_name);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $triptype = $result->fetch_assoc();
-            
-            if (!$triptype) {
-                $_SESSION['message'] = "Error: Triptype not found";
-                header("Location: alltriptype.php");
-                exit();
-            }
-        } else {
-            $_SESSION['message'] = "Error: Invalid Destination ID";
+        $stmt = $conn->prepare("SELECT * FROM triptypes WHERE triptype = ?");
+        $stmt->bind_param("s", $triptype_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $triptype = $result->fetch_assoc();
+
+        if (!$triptype) {
+            $_SESSION['message'] = "Error: Triptype not found";
             header("Location: alltriptype.php");
             exit();
         }
     } else {
-        $_SESSION['message'] = "Error: Destination ID not specified";
+        $_SESSION['message'] = "Error: Triptype name not specified";
         header("Location: alltriptype.php");
         exit();
     }
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -109,21 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
-  <!-- Overlay for mobile sidebar -->
   <div class="overlay" :class="{ 'open': sidebarOpen }" @click="sidebarOpen = false"></div>
 
-  <!-- Top Navigation Bar -->
   <?php include 'frontend/header.php'; ?>
-
-  <!-- Sidebar -->
   <?php include 'frontend/sidebar.php'; ?>
 
-  <!-- Main Content Area -->
   <main class="main-content pt-16 min-h-screen transition-all duration-300">
     <div class="p-6">
-      <!-- Edit Trip Type Content -->
       <div class="bg-white rounded-xl shadow-md p-6">
-        <!-- Header Section -->
         <div class="mb-8">
           <div class="gradient-bg rounded-2xl p-6 text-white">
             <div class="flex justify-between items-center">
@@ -133,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </h1>
                 <p class="text-blue-100">Update trip type information</p>
               </div>
-              <a href="alltriptype.php" 
+              <a href="alltriptype.php"
                  class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all duration-300">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Back to List
@@ -142,17 +135,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
         </div>
 
-        <!-- Messages -->
-        <?php include('messages.php'); ?>
+        <!-- ✅ Message block -->
+        <?php if (isset($_SESSION['message'])): ?>
+          <div class="mb-6">
+            <div class="<?php echo (strpos($_SESSION['message'], 'Error') !== false) ? 'bg-red-100 text-red-700 border-red-400' : 'bg-green-100 text-green-700 border-green-400'; ?> border rounded-lg px-4 py-3 shadow-sm">
+              <div class="flex justify-between items-center">
+                <p class="font-medium"><?php echo htmlspecialchars($_SESSION['message']); ?></p>
+                <button onclick="this.parentElement.parentElement.remove();" class="text-gray-500 hover:text-gray-700">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
 
-        <!-- Form Section -->
         <div class="glass-effect rounded-2xl shadow-xl p-6">
           <form action="edittriptype.php" method="POST" enctype="multipart/form-data" class="space-y-6">
             <input type="hidden" name="original_name" value="<?= htmlspecialchars($triptype['triptype']) ?>">
             <input type="hidden" name="current_image" value="<?= htmlspecialchars($triptype['main_image']) ?>">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Name -->
               <div class="space-y-2">
                 <label class="block text-sm font-semibold text-gray-700">
                   <i class="fas fa-tag mr-2 text-blue-500"></i>Trip Type Name
@@ -161,7 +164,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               </div>
 
-              <!-- Description -->
               <div class="space-y-2">
                 <label class="block text-sm font-semibold text-gray-700">
                   <i class="fas fa-align-left mr-2 text-blue-500"></i>Description
@@ -171,7 +173,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           required><?= htmlspecialchars($triptype['description']) ?></textarea>
               </div>
 
-              <!-- Image Upload -->
               <div class="col-span-2 space-y-4">
                 <label class="block text-sm font-semibold text-gray-700">
                   <i class="fas fa-image mr-2 text-blue-500"></i>Trip Type Image
@@ -186,7 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
                       <div class="flex flex-col items-center justify-center pt-5 pb-6">
                         <svg class="w-10 h-10 mb-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                         </svg>
                         <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span></p>
                         <p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 5MB)</p>
@@ -198,7 +200,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
               </div>
 
-              <!-- Buttons -->
               <div class="col-span-2 flex justify-end gap-4 pt-6">
                 <a href="alltriptype.php"
                    class="px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">

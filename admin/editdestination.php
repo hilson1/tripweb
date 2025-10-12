@@ -1,294 +1,194 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require '../connection.php';
+session_start();
 
-$destination = $_GET['name'] ?? null;
-$error = '';
-$destinationData = [];
+$destination = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $destination_name = htmlspecialchars(trim($_POST['destination']), ENT_QUOTES, 'UTF-8');
+        $description = htmlspecialchars(trim($_POST['description']), ENT_QUOTES, 'UTF-8');
+        $original_name = htmlspecialchars(trim($_POST['original_name']), ENT_QUOTES, 'UTF-8');
+        $current_image = htmlspecialchars(trim($_POST['current_image']), ENT_QUOTES, 'UTF-8');
 
-if (empty($destination)) {
-    header("Location: alldestination.php?error=missing_name");
-    exit();
-}
+        if (empty($destination_name)) throw new Exception("Error: Destination name is required");
+        if (empty($description)) throw new Exception("Error: Destination description is required");
 
+        $uploadDir = __DIR__ . '/assets/destinations/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
-// Fetch existing data
-$stmt = $conn->prepare("SELECT * FROM destinations WHERE distination = ?");
-$stmt->bind_param("s", $destination);
-$stmt->execute();
-$result = $stmt->get_result();
-$destinationData = $result->fetch_assoc();
+        $targetFile = $current_image;
+        if (!empty($_FILES['dest_image']['name'])) {
+            $fileName = basename($_FILES["dest_image"]["name"]);
+            $newFileName = uniqid() . '_' . $fileName;
+            $targetFilePath = $uploadDir . $newFileName;
+            $relativePath = 'assets/destinations/' . $newFileName;
+            $imageFileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
 
-if (!$destinationData) {
-    header("Location: alldestination.php?error=not_found");
-    exit();
-}
-
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $destination = trim($_POST['destination']);  // new name
-    $description = trim($_POST['description']);
-    $oldName = $_POST['old_name']; // store the old name from hidden input
-
-    
-    // Handle image upload if new image is provided
-    $imagePath = $destinationData['main_image'];
-    if (isset($_FILES['dest_image']) && $_FILES['dest_image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../assets/destinations/';
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        
-        // Validate image
-        $check = getimagesize($_FILES['dest_image']['tmp_name']);
-        if ($check === false) {
-            $error = "File is not an image.";
-        } else {
-            $imageFileType = strtolower(pathinfo($_FILES['dest_image']['name'], PATHINFO_EXTENSION));
             $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
-            
-            if (!in_array($imageFileType, $allowedTypes)) {
-                $error = "Only JPG, JPEG, PNG & GIF files are allowed.";
-            } elseif ($_FILES['dest_image']['size'] > 5 * 1024 * 1024) {
-                $error = "File is too large. Maximum size is 5MB.";
-            } else {
-                $fileName = uniqid() . '.' . $imageFileType;
-                $targetPath = $uploadDir . $fileName;
-                
-                if (move_uploaded_file($_FILES['dest_image']['tmp_name'], $targetPath)) {
-                    // Delete old image if exists
-                    if ($imagePath && file_exists('../' . $imagePath)) {
-                        unlink('../' . $imagePath);
-                    }
-                    $imagePath = 'assets/destinations/' . $fileName;
-                } else {
-                    $error = "Error uploading image.";
-                }
-            }
-        }
-    }
-    
-    // Only proceed if no errors
-    if (empty($error)) {
-            $stmt = $conn->prepare("UPDATE destinations 
-                                    SET distination = ?, description = ?, main_image = ? 
-                                    WHERE distination = ?");
-            if ($stmt) {
-                $stmt->bind_param("ssss", $destination, $description, $imagePath, $oldName);
+            if (!in_array($imageFileType, $allowedTypes)) throw new Exception("Error: Invalid file type.");
+            if ($_FILES["dest_image"]["size"] > 5000000) throw new Exception("Error: File too large.");
 
-                if ($stmt->execute()) {
-                    header("Location: alldestination.php?success=1");
-                    exit();
-                } else {
-                    $error = "Error updating destination: " . $stmt->error;
-                }
-                $stmt->close();
-            } else {
-                $error = "Database error: " . $conn->error;
-            }
+            if (!move_uploaded_file($_FILES["dest_image"]["tmp_name"], $targetFilePath)) throw new Exception("Error uploading image.");
+
+            if (!empty($current_image) && file_exists(__DIR__ . '/../' . $current_image)) unlink(__DIR__ . '/../' . $current_image);
+            $targetFile = $relativePath;
         }
+
+        $stmt = $conn->prepare("UPDATE destinations SET distination = ?, description = ?, main_image = ? WHERE distination = ?");
+        $stmt->bind_param("ssss", $destination_name, $description, $targetFile, $original_name);
+        if (!$stmt->execute()) throw new Exception("Error: " . $stmt->error);
+
+        $_SESSION['message'] = "Success: Destination updated successfully!";
+        header("Location: alldestination.php");
+        exit();
+    } catch (Exception $e) {
+        $_SESSION['message'] = $e->getMessage();
+        header("Location: editdestination.php?name=" . urlencode($destination_name));
+        exit();
     }
-    
-    $conn->close();
+} else {
+    if (isset($_GET['name'])) {
+        $destination_name = htmlspecialchars(trim($_GET['name']), ENT_QUOTES, 'UTF-8');
+        $stmt = $conn->prepare("SELECT * FROM destinations WHERE distination = ?");
+        $stmt->bind_param("s", $destination_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $destination = $result->fetch_assoc();
+        if (!$destination) {
+            $_SESSION['message'] = "Error: Destination not found";
+            header("Location: alldestination.php");
+            exit();
+        }
+    } else {
+        $_SESSION['message'] = "Error: Destination name not specified";
+        header("Location: alldestination.php");
+        exit();
+    }
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Edit Destination - ThankYouNepalTrip</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="frontend/sidebar.css">
 </head>
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal" x-data="{ sidebarOpen: false }">
-  <!-- Overlay for mobile sidebar -->
-  <div class="overlay" :class="{ 'open': sidebarOpen }" @click="sidebarOpen = false"></div>
-
-  <!-- Top Navigation Bar -->
   <?php include 'frontend/header.php'; ?>
-
-  <!-- Sidebar -->
   <?php include 'frontend/sidebar.php'; ?>
 
-  <!-- Main Content Area -->
   <main class="main-content pt-16 min-h-screen transition-all duration-300">
     <div class="p-6">
       <div class="bg-white rounded-xl shadow-md p-6">
         <div class="mb-8">
-          <div class="gradient-bg rounded-2xl p-6 text-white">
-            <h1 class="text-3xl font-bold">
-              <i class="fas fa-map-marker-alt mr-3"></i>Edit Destination
-            </h1>
+          <div class="gradient-bg rounded-2xl p-6 text-white flex justify-between items-center">
+            <div>
+              <h1 class="text-3xl font-bold mb-2"><i class="fas fa-map-marker-alt mr-3"></i>Edit Destination</h1>
+              <p class="text-blue-100">Update destination information</p>
+            </div>
+            <a href="alldestination.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all">
+              <i class="fas fa-arrow-left mr-2"></i>Back to List
+            </a>
           </div>
         </div>
 
-       <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?name=' . urlencode($destination); ?>" 
-              method="post" enctype="multipart/form-data">
-        <input type="hidden" name="old_name" value="<?php echo htmlspecialchars($destination); ?>">
-
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="form-group">
-              <label class="block text-gray-700 mb-2 font-medium">Destination Name *</label>
-              <input type="text" name="destination" id="destination" required 
-                     value="<?php echo htmlspecialchars($destinationData['distination']); ?>"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            
-            <!-- <div class="form-group">
-              <label class="block text-gray-700 mb-2 font-medium">Status *</label>
-              <select name="status" id="status" required
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="active" >Active</option>
-                <option value="inactive" >Inactive</option>
-              </select>
-            </div> -->
-            
-            <div class="md:col-span-2 form-group">
-              <label class="block text-gray-700 mb-2 font-medium">Description *</label>
-              <textarea name="description" id="description" rows="4" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"><?php echo htmlspecialchars($destinationData['description']); ?></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label class="block text-gray-700 mb-2 font-medium">Destination Image</label>
-              <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <input type="file" name="dest_image" id="dest_image" accept="image/*" 
-                       class="block w-full text-sm text-gray-500
-                              file:mr-4 file:py-2 file:px-4
-                              file:rounded-lg file:border-0
-                              file:text-sm file:font-semibold
-                              file:bg-blue-50 file:text-blue-700
-                              hover:file:bg-blue-100"
-                       onchange="previewImage(event)">
-                <p class="mt-2 text-sm text-gray-500">JPEG, PNG, or JPG (Max 5MB)</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center">
-              <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                <?php if (!empty($destinationData['main_image'])): ?>
-                  <img id="currentImage" src="../<?php echo htmlspecialchars($destinationData['main_image']); ?>" 
-                       alt="Current Image" class="w-full h-full object-cover">
-                <?php else: ?>
-                  <i class="fas fa-image text-gray-400 text-3xl" id="placeholderIcon"></i>
-                <?php endif; ?>
-                <img id="imagePreview" src="#" alt="Preview" class="hidden w-full h-full object-cover">
+        <?php if (isset($_SESSION['message'])): ?>
+          <div class="mb-6">
+            <div class="<?php echo (strpos($_SESSION['message'], 'Error') !== false) ? 'bg-red-100 text-red-700 border-red-400' : 'bg-green-100 text-green-700 border-green-400'; ?> border rounded-lg px-4 py-3 shadow-sm">
+              <div class="flex justify-between items-center">
+                <p class="font-medium"><?php echo htmlspecialchars($_SESSION['message']); ?></p>
+                <button onclick="this.parentElement.parentElement.remove();" class="text-gray-500 hover:text-gray-700">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
           </div>
-          
-          <div class="mt-8 flex justify-end space-x-4">
-            <a href="alldestination.php" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-              Cancel
-            </a>
-            <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition-colors">
-              <i class="fas fa-save mr-2"></i>Update Destination
-            </button>
+          <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
+
+        <form action="editdestination.php" method="POST" enctype="multipart/form-data" class="space-y-6">
+          <input type="hidden" name="original_name" value="<?= htmlspecialchars($destination['distination']) ?>">
+          <input type="hidden" name="current_image" value="<?= htmlspecialchars($destination['main_image']) ?>">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="fas fa-tag mr-2 text-blue-500"></i>Destination Name
+              </label>
+              <input type="text" name="destination" value="<?= htmlspecialchars($destination['distination']) ?>"
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition" required>
+            </div>
+
+            <div class="space-y-2 md:col-span-2">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="fas fa-align-left mr-2 text-blue-500"></i>Description
+              </label>
+              <textarea name="description" rows="4" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 transition"><?= htmlspecialchars($destination['description']) ?></textarea>
+            </div>
+
+            <div class="col-span-2 space-y-4">
+              <label class="block text-sm font-semibold text-gray-700">
+                <i class="fas fa-image mr-2 text-blue-500"></i>Destination Image
+              </label>
+              <div class="flex items-start gap-6">
+                <div id="current-image" class="w-48">
+                  <img src="<?php echo '../' . $destination['main_image']; ?>" class="max-h-48 w-auto object-cover rounded-lg border shadow-md">
+                  <span class="text-xs text-gray-500 block mt-2 text-center">Current Image</span>
+                </div>
+
+                <div class="flex-1">
+                  <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg class="w-10 h-10 mb-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5A5.5 5.5 0 0 0 5.207 5.021A4 4 0 0 0 5 13h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                      </svg>
+                      <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span></p>
+                      <p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 5MB)</p>
+                    </div>
+                    <input id="dest_image" name="dest_image" type="file" class="hidden" accept="image/*">
+                  </label>
+                  <div id="image-preview" class="mt-4"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-2 flex justify-end gap-4 pt-6">
+              <a href="alldestination.php" class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                <i class="fas fa-times mr-2"></i>Cancel
+              </a>
+              <button type="submit"
+                      class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg shadow-lg font-medium transition">
+                <i class="fas fa-save mr-2"></i>Update Destination
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
   </main>
 
-  <!-- Alpine JS for dropdown functionality -->
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-  
   <script>
-    // Initialize sidebar state
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('main', () => ({
-        sidebarOpen: window.innerWidth >= 1024,
-        
-        init() {
-          if (window.innerWidth < 1024) {
-            this.sidebarOpen = false;
-          }
-          
-          window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) {
-              this.sidebarOpen = true;
-            }
-          });
-        }
-      }));
-    });
-
-    function previewImage(event) {
-      const input = event.target;
-      const preview = document.getElementById('imagePreview');
-      const currentImage = document.getElementById('currentImage');
-      const placeholder = document.getElementById('placeholderIcon');
-      const file = input.files[0];
-      
+    document.getElementById('dest_image').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('image-preview');
+      const currentImage = document.getElementById('current-image');
       if (file) {
-        // Validate file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-          alert('File is too large. Maximum size is 5MB.');
-          input.value = '';
-          return;
-        }
-        
         const reader = new FileReader();
-        reader.onload = function(e) {
-          preview.src = e.target.result;
-          preview.classList.remove('hidden');
-          if (currentImage) currentImage.classList.add('hidden');
-          if (placeholder) placeholder.classList.add('hidden');
-        }
+        reader.onload = e => {
+          preview.innerHTML = `<img src="${e.target.result}" class="max-h-48 w-auto object-cover rounded-lg shadow-md">`;
+          currentImage.classList.add('hidden');
+        };
         reader.readAsDataURL(file);
-      } else {
-        preview.src = '#';
-        preview.classList.add('hidden');
-        if (currentImage) currentImage.classList.remove('hidden');
-        if (placeholder && !currentImage) placeholder.classList.remove('hidden');
       }
-    }
-
-    function validateForm() {
-      const destination = document.getElementById('destination').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const fileInput = document.getElementById('dest_image');
-      
-      console.log("Validating form...");
-      
-      // Basic validation
-      if (!destination || !description) {
-        console.log("Validation failed: Required fields empty");
-        alert('Please fill in all required fields.');
-        return false;
-      }
-      
-      // File validation if a file was selected
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        
-        if (!validTypes.includes(file.type)) {
-          console.log("Validation failed: Invalid file type");
-          alert('Only JPG, PNG, and GIF images are allowed.');
-          return false;
-        }
-        
-        if (file.size > 5 * 1024 * 1024) {
-          console.log("Validation failed: File too large");
-          alert('Image size must be less than 5MB.');
-          return false;
-        }
-      }
-
-      console.log("Validation passed");
-      return true;
-    }
+    });
   </script>
 </body>
 </html>

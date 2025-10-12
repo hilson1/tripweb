@@ -2,7 +2,7 @@
 require '../connection.php';
 
 // Get fresh data from the trip_booking table
-$stmt = $conn->prepare("SELECT * FROM trip_booking ORDER BY id ");
+$stmt = $conn->prepare("SELECT * FROM trip_bookings ORDER BY id ");
 $stmt->execute();
 $result = $stmt->get_result();
 ?>

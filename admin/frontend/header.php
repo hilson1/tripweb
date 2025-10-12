@@ -27,21 +27,19 @@
     
     <!-- Right section - User controls -->
     <div class="flex items-center space-x-4">
-      <!-- Notifications -->
-      <div class="relative">
-        <button class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition">
-          <i class="fas fa-bell text-xl"></i>
-          <span class="notification-badge">3</span>
-        </button>
-      </div>
+  
       
       <!-- Messages -->
       <div class="relative">
-        <button class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition">
-          <i class="fas fa-envelope text-xl"></i>
-          <span class="notification-badge">5</span>
-        </button>
+        <a href="https://webmail.thankyounepaltrip.com/cpsess8124638566/3rdparty/roundcube/?_task=mail&_mbox=INBOX" target="_blank">
+          <button class="text-white p-2 rounded-full hover:bg-white hover:bg-opacity-10 transition relative">
+            <i class="fas fa-envelope text-xl"></i>
+            <span class="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">0</span>
+          </button>
+        </a>
       </div>
+
+
       
       <!-- User dropdown -->
       <div x-data="{ open: false }" class="relative">
@@ -71,14 +69,40 @@
           <a href="profileview" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
             <i class="fas fa-user-circle mr-2"></i> Profile
           </a>
-          <a href="changepass" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+          <a href="changepassword" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
             <i class="fas fa-key mr-2"></i> Change Password
           </a>
           <div class="border-t border-gray-200 my-1"></div>
-          <a href="logout" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+          <a href="frontend/admin-logout.php" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
             <i class="fas fa-sign-out-alt mr-2"></i> Logout
           </a>
-        </div>
+          </div>
+
       </div>
     </div>
   </header>
+
+  <script>
+async function updateMailCount() {
+  try {
+    const res = await fetch('get_unread_count.php', { cache: 'no-store' });
+    const data = await res.json();
+    const badge = document.querySelector('.notification-badge');
+
+    if (data.error) {
+      console.warn(data.error);
+      badge.style.display = 'none';
+      return;
+    }
+
+    badge.textContent = data.unread;
+    badge.style.display = data.unread > 0 ? 'inline' : 'none';
+  } catch (err) {
+    console.error('Mail count fetch failed:', err);
+  }
+}
+
+// Run immediately and every 60 seconds
+updateMailCount();
+setInterval(updateMailCount, 60000);
+</script>

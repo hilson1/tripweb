@@ -1,49 +1,53 @@
 @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap");
 
+/* Base Reset */
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   font-family: "Source Serif 4", serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-}
-body {
-  padding-top: 160px;
-  /* Adjust this value if needed */
 }
 
-/* hero-section css */
+body {
+  padding-top: 160px;
+  overflow-x: hidden;
+}
+
+/* Hero Section */
 .hero-section {
   background-image: url(assets/img/contact.jpg);
   background-position: center;
-  height: 700px;
-  width: 100vw;
-  background-repeat: no-repeat;
   background-size: cover;
-  padding: 80px 15px 80px 15px;
+  background-repeat: no-repeat;
+  height: 700px;
+  width: 100%;
+  padding: 80px 15px;
 }
 
 .bg {
-  height: max-content;
-  margin: 0 auto;
   max-width: 1920px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
   gap: 20px;
 }
 
+.content {
+  text-align: left;
+}
+
 .content h1 {
   font-size: 3rem;
   font-weight: bold;
   color: whitesmoke;
+  font-family: "Pacifico", cursive;
 }
 
 .content p {
   font-size: 1.5rem;
   color: whitesmoke;
+  font-family: "Pacifico", cursive;
 }
 
 .search-box {
@@ -53,50 +57,25 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 350px;
 }
+
 #search-icon {
   color: green;
 }
-.search-box .form-select,
-.search-box .btn {
-  margin-bottom: 10px;
+
+/* Features */
+.features .container h1 {
+  font-family: "Pacifico", cursive;
+  font-size: 2.8rem;
+  color: #17252a;
 }
 
-.search-box .input-group-text {
-  background: none;
-  border: none;
+.features .container p {
+  color: #17252a;
+  font-size: 1.2rem;
+  margin-bottom: 40px;
 }
 
-@media (max-width: 768px) {
-  .hero-section {
-    height: max-content;
-  }
-  .content,
-  .search-box {
-    position: static;
-    transform: none;
-    width: 80%;
-    margin-bottom: 20px;
-  }
-
-  .content {
-    text-align: center;
-  }
-
-  .bg {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-/* card container index.php */
-
-/* features */
-
-/* testimonials css */
-
-/* scroll up button */
+/* Scroll-up Button */
 .scroll-up {
   background-color: #3cc2b1;
   width: 40px;
@@ -109,9 +88,343 @@ body {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  display: none; /* Initially hidden */
+  display: none;
 }
+
 .scroll-up i {
   color: white;
   font-size: 24px;
+}
+
+/* Features Icons */
+.feature-icon {
+  background-color: #e0f7fa;
+  border-radius: 50%;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.feature-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.feature-description {
+  color: #6c757d;
+}
+
+/* Section Title */
+.section-title {
+  text-align: center;
+  padding: 50px 0;
+}
+
+.section-title h2 {
+  font-family: "Pacifico", cursive;
+  color: #00a676;
+  font-size: 24px;
+}
+
+.section-title h1 {
+  font-weight: 700;
+  font-size: 36px;
+  color: #000;
+}
+
+.section-title p {
+  color: #666;
+  font-size: 16px;
+}
+
+.section-title .divider {
+  margin: 20px auto;
+  width: 50px;
+  height: 2px;
+  background-color: #f4a261;
+}
+
+/* Card Grid */
+#card-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  background-color: #f4f4f4;
+  padding: 30px 15px;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+  max-width: 400px;
+  margin: auto;
+  transition: 0.3s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Trip Cards */
+.trip-card {
+  background-color: #fff;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.trip-card:hover {
+  transform: translateY(-10px);
+}
+
+.trip-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.trip-card-body {
+  padding: 20px;
+}
+
+.trip-card-title {
+  font-size: 1.5rem;
+  color: #17252a;
+  margin-bottom: 10px;
+}
+
+.trip-card-text {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 15px;
+}
+
+/* Testimonials */
+.carousel-testi {
+  margin: 0 auto;
+  width: 1200px;
+  overflow: hidden;
+  position: relative;
+  background: white;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.reviews {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  width: max-content;
+}
+
+.review {
+  min-width: 1200px;
+}
+
+.container-testi {
+  padding: 10px;
+  background-color: white;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.image-container img {
+  border-radius: 50%;
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+}
+
+.text-container {
+  max-width: 800px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.description {
+  color: #718096;
+  margin-bottom: 16px;
+}
+
+.author {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* ========================= */
+/* RESPONSIVE DESIGN */
+/* ========================= */
+
+/* Tablets */
+@media (max-width: 992px) {
+  .hero-section {
+    height: auto;
+    padding: 60px 20px;
+  }
+
+  .bg {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .content h1 {
+    font-size: 2.2rem;
+  }
+
+  .content p {
+    font-size: 1.2rem;
+  }
+
+  .search-box {
+    width: 80%;
+  }
+
+  #card-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .carousel-testi,
+  .review {
+    max-width: 90%;
+  }
+
+  .trip-card img {
+    height: 180px;
+  }
+
+  .section-title h1 {
+    font-size: 30px;
+  }
+}
+
+/* Mobile Landscape */
+@media (max-width: 768px) {
+  #card-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .content {
+    text-align: center;
+  }
+
+  .content h1 {
+    font-size: 2rem;
+  }
+
+  .content p {
+    font-size: 1rem;
+  }
+
+  .search-box {
+    width: 90%;
+    padding: 15px;
+  }
+
+  .trip-card img {
+    height: 160px;
+  }
+
+  .carousel-testi {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .container-testi {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .section-title h1 {
+    font-size: 26px;
+  }
+
+  .section-title h2 {
+    font-size: 18px;
+  }
+}
+
+/* Mobile Portrait */
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 40px 10px;
+  }
+
+  .content h1 {
+    font-size: 1.6rem;
+  }
+
+  .content p {
+    font-size: 0.9rem;
+  }
+
+  .search-box {
+    width: 95%;
+    padding: 10px;
+  }
+
+  .feature-icon {
+    padding: 15px;
+  }
+
+  .trip-card-body {
+    padding: 15px;
+  }
+
+  .trip-card-title {
+    font-size: 1.2rem;
+  }
+
+  .trip-card-text {
+    font-size: 0.9rem;
+  }
+
+  .carousel-testi,
+  .review {
+    max-width: 320px;
+  }
+
+  .image-container img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .text-container {
+    max-width: 300px;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
+  .scroll-up {
+    width: 35px;
+    height: 35px;
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .scroll-up i {
+    font-size: 20px;
+  }
+}
+@media (max-width: 360px) {
+  .content h1 {
+    font-size: 1.4rem;
+  }
+
+  .content p {
+    font-size: 0.8rem;
+  }
 }

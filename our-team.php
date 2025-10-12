@@ -7,8 +7,9 @@ include("frontend/session_start.php");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Our-team | ThankYouNepalTrip</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
     <link rel="stylesheet" href="index.css">
@@ -47,19 +48,23 @@ include("frontend/session_start.php");
         }
 
         .hero {
-            background: url('ourteam.jpg') no-repeat center center/cover;
+            background: url('assets/img/ourteam.jpg') no-repeat center center/cover;
             color: white;
             text-align: center;
-            padding: 80px 20px;
+           padding: 150px 20px;
+         
         }
 
-        .hero h1 {
+      .hero h1{
             font-size: 3.5rem;
+            margin-bottom: 20px;
             font-weight: bold;
+            font-family: 'Pacifico', cursive;
         }
-
-        .hero p {
+        .hero p{
             font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-family: 'Pacifico', cursive;
         }
     </style>
 </head>

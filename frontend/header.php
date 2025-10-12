@@ -2,7 +2,7 @@
     <div class="bg-teal text-white py-2 fixed-top top-header" id="topHeader">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <a href="#">
+                <a href="#" target="_blank">
                     <i class="fab fa-facebook-f" id="social-icon"></i>
                 </a>
                 <a href="#">
@@ -20,11 +20,17 @@
                     <a href="tel:+977 9742847684" class="phone-link" style="color:white; text-decoration:none;">9741847684</a>
                 </span>
                 <span>
-                    <a href="mailto:contact@gmail.com">
+                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=info@thankyounepaltrip.com" target="_blank">
                         <i class="fas fa-envelope" id="social-icon"></i>
                     </a>
-                    <a href="mailto:contact@gmail.com" class="email-link" style="color:white; text-decoration:none;">info@thankyounepaltrip.com</a>
-                </span>
+                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=info@thankyounepaltrip.com" 
+                        target="_blank" 
+                        class="email-link" 
+                        style="color:white; text-decoration:none;">
+                        info@thankyounepaltrip.com
+                    </a>
+                    </span>
+
             </div>
         </div>
     </div>
@@ -59,17 +65,17 @@
                             <li><a class="dropdown-item" href="activities?activity-is=Trekking">Trekking</a></li>
                             <li><a class="dropdown-item" href="activities?activity-is=Tour">Tour </a></li>
                             <li><a class="dropdown-item" href="activities?activity-is=Hiking">Hiking </a></li>
-                            <li><a class="dropdown-item" href="more-activity">More</a></li>
+                            <li><a class="dropdown-item" href="activity">More</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="tripTypesDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">Trip Types</a>
                         <ul class="dropdown-menu" aria-labelledby="tripTypesDropdown">
-                            <li><a class="dropdown-item" href="triptypes?triptype-is=Nature%20Friendly">Nature Friendly</a></li>
-                            <li><a class="dropdown-item" href="triptypes?triptype-is=Cultural">Cultural</a></li>
-                            <li><a class="dropdown-item" href="triptypes?triptype-is=Budget%20Friendly">Budget Friendly</a></li>
-                            <li><a class="dropdown-item" href="trip-types">More</a></li>
+                            <li><a class="dropdown-item" href="trip-types?triptype-is=Nature%20Friendly">Nature Friendly</a></li>
+                            <li><a class="dropdown-item" href="trip-types?triptype-is=Cultural">Cultural</a></li>
+                            <li><a class="dropdown-item" href="trip-types?triptype-is=Budget%20Friendly">Budget Friendly</a></li>
+                            <li><a class="dropdown-item" href="trip-type">More</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
