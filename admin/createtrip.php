@@ -5,8 +5,8 @@ require 'frontend/connection.php'; // Reuse your DB connection file
 $tripTypesQuery = "SELECT triptype FROM triptypes";
 $tripTypesResult = $conn->query($tripTypesQuery);
 
-// Fetch locations (with description)
-$locationsQuery = "SELECT distination, description FROM destinations";
+// Fetch locations
+$locationsQuery = "SELECT distination FROM destinations";
 $locationsResult = $conn->query($locationsQuery);
 
 // Fetch activities
@@ -78,7 +78,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Create Trip - ThankYouNepalTrip</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="frontend/sidebar.css">
@@ -246,9 +246,7 @@ $conn->close();
                             <option value="" disabled selected>Select Location</option>
                             <?php if ($locationsResult && $locationsResult->num_rows > 0): ?>
                                 <?php while ($row = $locationsResult->fetch_assoc()): ?>
-                                    <option 
-                                        value="<?php echo htmlspecialchars($row['distination']); ?>" 
-                                        data-description="<?php echo htmlspecialchars($row['description']); ?>">
+                                    <option value="<?php echo htmlspecialchars($row['distination']); ?>">
                                         <?php echo htmlspecialchars($row['distination']); ?>
                                     </option>
                                 <?php endwhile; ?>
@@ -290,19 +288,5 @@ $conn->close();
 
     <!-- Alpine JS -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Auto-fill short description from selected location
-        const locationSelect = document.getElementById("location");
-        const descriptionInput = document.getElementById("description");
-
-        locationSelect.addEventListener("change", function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const desc = selectedOption.getAttribute("data-description");
-            descriptionInput.value = desc ? desc : "";
-        });
-    });
-    </script>
 </body>
 </html>

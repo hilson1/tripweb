@@ -2,16 +2,15 @@
 include("frontend/session_start.php");
 require 'connection.php';
 
-// Initialize default values
+// Default values
 $activity_name = "Unknown Activity";
 $description = "No activity description specified.";
 $main_image_filename = "default-activity.jpg";
 
-// Check if 'activity-is' parameter exists
+// Fetch activity details
 if (isset($_GET['activity-is'])) {
     $activity_name = trim($_GET['activity-is']);
 
-    // Secure query to fetch activity details
     $sql = "SELECT description, main_image FROM activities WHERE activity = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $activity_name);
@@ -27,14 +26,14 @@ if (isset($_GET['activity-is'])) {
     $stmt->close();
 }
 
-// Clean and determine image path
+// Image handling
 $main_image_filename = basename($main_image_filename);
 $background_url = "assets/activity/" . htmlspecialchars($main_image_filename);
 if (empty($main_image_filename) || !file_exists($background_url)) {
     $background_url = "assets/activity/default-activity.jpg";
 }
 
-// Fetch related trips for this activity
+// Fetch related trips
 $sql_trips = "SELECT trips.*, trip_images.main_image 
               FROM trips 
               INNER JOIN trip_images ON trips.tripid = trip_images.tripid 
@@ -60,136 +59,151 @@ $conn->close();
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
   <style>
-    .card-container { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; }
-    .card { border:none; border-radius:10px; max-width:calc(33.33% - 20px); transition:0.3s; }
-    .card:hover { transform:translateY(-5px); box-shadow:0 8px 16px rgba(0,0,0,0.15); }
-    .carousel img { height:250px; width:100%; object-fit:cover; border-radius:10px 10px 0 0; }
-    @media(max-width:768px){ .card{max-width:100%;} }
+    .destination-hero-head {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      height: 400px;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+
+    .destination-header-title {
+      position: absolute;
+      text-align: center;
+      color: white;
+      z-index: 10;
+    }
+
+    .destination-header-title h1 {
+      font-size: 4em;
+      font-weight: 600;
+      text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+    }
+
+    .features { margin-top: 40px; }
+
+    .section-title {
+      text-align: center;
+      padding: 50px 0;
+    }
+
+    .section-title h1 {
+      font-weight: 700;
+      font-size: 36px;
+      color: #000;
+    }
+
+    /* --- CARD GRID --- */
+    #card-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      background-color: transparent;
+    }
+
+    @media (max-width: 768px) {
+      #card-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* --- CARD --- */
+    .card {
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      height: 520px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: 0.3s;
+      margin: 0 auto 30px;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transform: translateY(-5px);
+    }
+
+    /* --- CARD IMAGE --- */
+    .carousel img {
+      height: 230px;
+      width: 100%;
+      object-fit: cover;
+      border-radius: 10px 10px 0 0;
+    }
+
+    /* --- CARD BODY --- */
+    .card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 15px;
+    }
+
+    /* --- PRICE --- */
+    .price {
+      font-size: 24px;
+      font-weight: bold;
+      color: black;
+      margin-top: auto;
+    }
+
+    /* --- BUTTON --- */
+    .card-body .btn {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    /* --- SCROLL BUTTON --- */
+    .scroll-up {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background-color: #00a676;
+      color: white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 20px;
+      z-index: 999;
+    }
   </style>
-     <style>
-        .destination-hero-head {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            height: 400px;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-
-        .destination-header-title {
-            position: absolute;
-            text-align: center;
-            color: white;
-            z-index: 10;
-        }
-
-        .destination-header-title h1 {
-            font-size: 4em;
-            font-weight: 600;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
-        }
-
-        /* Section styling */
-        .features {
-            margin-top: 40px;
-        }
-
-        .section-title {
-            text-align: center;
-            padding: 50px 0;
-        }
-
-        .section-title h1 {
-            font-weight: 700;
-            font-size: 36px;
-            color: #000;
-        }
-
-        /* Card grid */
-        .card-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            row-gap: 20px;
-        }
-
-        .card {
-            border: none;
-            border-radius: 10px;
-            max-width: 400px;
-            margin: auto;
-            transition: 0.3s;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transform: translateY(-5px);
-        }
-
-        .price {
-            font-size: 24px;
-            font-weight: bold;
-            color: black;
-        }
-
-        #card-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            background-color: transparent;
-        }
-
-        @media (max-width: 768px) {
-            #card-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .trip-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        /* Scroll up button */
-        .scroll-up {
-            display: none;
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background-color: #00a676;
-            color: white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 20px;
-            z-index: 999;
-        }
-    </style>
 </head>
+
 <body>
 
 <?php include("frontend/header.php"); ?>
 
-<div class="destination-hero-head" style="background-image: url('<?php echo $background_url; ?>');">
+<div class="destination-hero-head" style="background-image: url('<?php echo htmlspecialchars($background_url); ?>');">
   <span class="destination-header-title">
     <h1><?php echo $safe_activity_name; ?></h1>
   </span>
 </div>
 
-<div class="container text-left py-4">
-  <h2><?php echo $safe_activity_name; ?></h2>
-  <p style="font-size: 1.2rem;"><?php echo $safe_description; ?></p>
+<div class="features">
+  <div class="container text-left py-1">
+    <h1 class="mt-4"><?php echo $safe_activity_name; ?></h1>
+    <p style="font-size: 1.5rem;"><?php echo $safe_description; ?></p>
+  </div>
 </div>
 
-<div class="container text-left py-3">
-  <h2>Popular Trips for <?php echo $safe_activity_name; ?></h2>
+<div class="features">
+  <div class="container text-left py-1">
+    <h1 class="mt-4">Popular trips for <?php echo $safe_activity_name; ?></h1>
+  </div>
 </div>
 
 <div class="features">
@@ -200,7 +214,7 @@ $conn->close();
           <div class="position-relative">
             <div class="carousel">
               <a href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
-                <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" class="img-fluid slide active" alt="<?php echo htmlspecialchars($trip['title']); ?>">
+                <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" alt="<?php echo htmlspecialchars($trip['title']); ?>">
               </a>
             </div>
           </div>

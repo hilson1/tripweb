@@ -1,4 +1,8 @@
 <?php
+if (!isset($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']) === false) {
+    header("Location: index.php");
+    exit;
+}
 
 
 session_start();

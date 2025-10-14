@@ -1,286 +1,131 @@
 <?php
-require_once('frontend/connection.php');
+require "frontend/connection.php";
+session_start();
 
-// Handle delete request
-if (isset($_POST['delete_item'])) {
-    $item_id = $_POST['item_id'] ?? null;
-
-    if (!empty($item_id) && is_numeric($item_id)) {
-        $stmt = $conn->prepare("DELETE FROM itinerary WHERE itinerary_id = ?");
-        if ($stmt) {
-            $stmt->bind_param("i", $item_id);
-            if ($stmt->execute()) {
-                header("Location: allitinerary.php?delete=success");
-                exit();
-            } else {
-                $delete_error = "Error executing delete: " . $stmt->error;
-            }
-            $stmt->close();
-        } else {
-            $delete_error = "Error preparing delete statement: " . $conn->error;
-        }
-    } else {
-        $delete_error = "Invalid itinerary ID";
-    }
-}
-
-// Fetch all itinerary data with trip name
-$sql = "
-    SELECT i.itinerary_id, i.tripid, i.day_number, i.title, i.description, t.title AS trip_name
-    FROM itinerary i
-    LEFT JOIN trips t ON i.tripid = t.tripid
-    ORDER BY i.tripid, i.day_number
-";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$result = $stmt->get_result();
+$query = "SELECT i.*, t.title AS trip_title FROM itinerary i 
+          JOIN trips t ON i.tripid = t.tripid 
+          ORDER BY i.itinerary_id DESC";
+$result = $conn->query($query);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>All Itineraries - ThankYouNepalTrip</title>
-
+  <meta charset="UTF-8">
+  <title>Itineraries Management - ThankYouNepalTrip</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="frontend/sidebar.css">
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
+
 <body class="bg-gray-50 font-sans leading-normal tracking-normal">
+<div class="flex h-screen">
+  <?php include("frontend/header.php"); ?>
+  <?php include("frontend/sidebar.php"); ?>
 
-  <!-- Top Navigation Bar -->
-  <?php include('frontend/header.php'); ?>
-
-  <!-- Sidebar -->
-  <?php include('frontend/sidebar.php'); ?>
-
-  <!-- Main Content Area -->
-  <main class="main-content pt-16 min-h-screen transition-all duration-300">
-    <div class="p-6">
-
-      <!-- Header Card -->
-      <div class="bg-white rounded-xl shadow-md p-6 mb-6 flex justify-between items-center flex-wrap">
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-bold mb-2"><i class="fas fa-route mr-2"></i>Itineraries Management</h1>
-          <p class="text-gray-500">Manage and monitor all itineraries</p>
-        </div>
-        <div class="text-right mt-4 sm:mt-0">
-          <div class="text-2xl font-bold"><?= $result->num_rows ?></div>
-          <div class="text-gray-400">Total Itineraries</div>
-        </div>
+  <main class="main-content pt-16 min-h-screen p-6 w-full mt-16" 
+        x-data="{ showConfirm: false, deleteId: null, search: '' }">
+    
+    <!-- Header -->
+    <div class="gradient-bg rounded-2xl p-6 text-white flex justify-between items-center mb-8 shadow-md">
+      <div>
+        <h1 class="text-3xl font-bold"><i class="fas fa-list-ul mr-2"></i>All Itineraries</h1>
+        <p class="text-green-100">Manage and organize trip itineraries</p>
       </div>
+      <a href="createitinerary.php" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+        <i class="fas fa-plus mr-2"></i>Add New
+      </a>
+    </div>
 
-      <!-- Error Message -->
-      <?php if (isset($delete_error)): ?>
-        <div class="bg-red-100 text-red-700 p-3 rounded mb-4"><?= htmlspecialchars($delete_error) ?></div>
+    <!-- Search Input -->
+    <div class="flex justify-end mb-4">
+      <input 
+        type="text" 
+        x-model="search"
+        placeholder="Search trip, itinerary, or day..." 
+        class="border border-gray-300 rounded-lg px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+    </div>
+
+    <!-- Table Section -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 overflow-x-auto">
+      <?php if ($result && $result->num_rows > 0): ?>
+      <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100 text-gray-700 uppercase text-sm">
+          <tr>
+            <th class="px-4 py-3 text-left border-b">#</th>
+            <th class="px-4 py-3 text-left border-b">Trip</th>
+            <th class="px-4 py-3 text-left border-b">Itinerary Title</th>
+            <th class="px-4 py-3 text-left border-b">Days / Activities</th>
+            <th class="px-4 py-3 text-center border-b">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700">
+          <?php $i = 1; while ($row = $result->fetch_assoc()): 
+            $tripTitle = htmlspecialchars($row['trip_title']);
+            $itineraryTitle = htmlspecialchars($row['itinerary_title']);
+            ob_start();
+            echo "<ul class='list-disc list-inside text-sm text-gray-600'>";
+            for ($j = 1; $j <= 6; $j++) {
+              if (!empty($row["title$j"])) echo "<li>" . htmlspecialchars($row["title$j"]) . "</li>";
+            }
+            echo "</ul>";
+            $daysList = ob_get_clean();
+          ?>
+          <tr class="hover:bg-gray-50 transition"
+              x-show="
+                search === '' ||
+                '<?= strtolower($tripTitle) ?>'.includes(search.toLowerCase()) ||
+                '<?= strtolower($itineraryTitle) ?>'.includes(search.toLowerCase()) ||
+                '<?= strtolower(strip_tags($daysList)) ?>'.includes(search.toLowerCase())
+              ">
+            <td class="px-4 py-3 border-b"><?= $i++ ?></td>
+            <td class="px-4 py-3 border-b font-semibold text-green-700"><?= $tripTitle ?></td>
+            <td class="px-4 py-3 border-b"><?= $itineraryTitle ?></td>
+            <td class="px-4 py-3 border-b"><?= $daysList ?></td>
+            <td class="px-4 py-3 border-b text-center space-x-4">
+              <a href="edititinerary.php?id=<?= $row['itinerary_id'] ?>" 
+                 class="text-blue-600 hover:text-blue-800 transition">
+                 <i class="fas fa-edit"></i>
+              </a>
+              <button @click="showConfirm = true; deleteId = <?= $row['itinerary_id'] ?>;" 
+                      class="text-red-600 hover:text-red-800 transition">
+                      <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
+      <?php else: ?>
+        <p class="text-center text-gray-600 py-10">No itineraries found.</p>
       <?php endif; ?>
+    </div>
 
-        <!-- Search and Add Button Section -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <div class="w-full md:w-1/3">
-            <div class="relative">
-              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-              <input type="text" id="searchInput" placeholder="Search itineraries..."
-                     class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            </div>
-          </div>
-          <a href="itineray.php" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center shadow-lg">
-            <i class="fas fa-plus mr-2"></i>Add New Itinerary
-          </a>
-        </div>
-
-      <!-- Table Card -->
-      <div class="bg-white rounded-2xl shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm" id="itineraryTable">
-            <thead class="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-              <tr>
-                <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><i class="fas fa-id-badge mr-1"></i>ID</th>
-                <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><i class="fas fa-route mr-1"></i>Trip</th>
-                <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><i class="fas fa-calendar-day mr-1"></i>Day</th>
-                <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><i class="fas fa-heading mr-1"></i>Title</th>
-                <th class="py-3 px-4 text-left font-semibold"><i class="fas fa-align-left mr-1"></i>Description</th>
-                <th class="py-3 px-4 text-left font-semibold whitespace-nowrap"><i class="fas fa-cog mr-1"></i>Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <?php if ($result->num_rows > 0): ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                  <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 whitespace-nowrap"><?= htmlspecialchars($row['itinerary_id']) ?></td>
-                    <td class="py-3 px-4 whitespace-nowrap"><?= htmlspecialchars($row['trip_name'] ?? 'N/A') ?></td>
-                    <td class="py-3 px-4 whitespace-nowrap"><?= htmlspecialchars($row['day_number']) ?></td>
-                    <td class="py-3 px-4"><?= htmlspecialchars($row['title']) ?></td>
-                    <td class="py-3 px-4"><?= htmlspecialchars($row['description']) ?></td>
-                    <td class="py-3 px-4">
-                      <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-                        <a href="edititinerary.php?itinerary_id=<?= $row['itinerary_id'] ?>" 
-                           class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-center">
-                          <i class="fas fa-edit mr-1"></i>Edit
-                        </a>
-                        <form method="POST" class="inline" onsubmit="return confirmDelete(event, <?= $row['itinerary_id'] ?>)">
-                          <input type="hidden" name="item_id" value="<?= $row['itinerary_id'] ?>">
-                          <button type="submit" name="delete_item" 
-                                  class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 w-full sm:w-auto">
-                            <i class="fas fa-trash-alt mr-1"></i>Delete
-                          </button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                <?php endwhile; ?>
-              <?php else: ?>
-                <tr>
-                  <td colspan="6" class="py-8 px-6 text-center text-gray-500">
-                    <i class="fas fa-route text-4xl mb-4 block"></i>
-                    <p class="text-lg">No itineraries found</p>
-                  </td>
-                </tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
-          <div class="flex flex-col sm:flex-row justify-between items-center text-xs sm:text-sm text-gray-600">
-            <div>Showing <span id="startEntry">1</span> to <span id="endEntry">10</span> of <span id="totalEntries"><?= $result->num_rows ?></span> entries</div>
-            <div class="flex flex-wrap space-x-2 mt-2 sm:mt-0" id="pagination"></div>
-          </div>
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showConfirm" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 w-96 text-center shadow-lg">
+        <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
+        <h3 class="text-lg font-semibold mb-4">Confirm Delete</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to delete this itinerary?</p>
+        <div class="flex justify-center space-x-4">
+          <form method="post" action="deleteitinerary.php">
+            <input type="hidden" name="id" :value="deleteId">
+            <button type="submit" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition">
+              Delete
+            </button>
+          </form>
+          <button @click="showConfirm = false" 
+                  class="bg-gray-300 px-5 py-2 rounded-lg hover:bg-gray-400 transition">
+            Cancel
+          </button>
         </div>
       </div>
     </div>
+
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<script>
-
-
-  // Delete Confirmation
-  function confirmDelete(event, formElement) {
-    event.preventDefault();
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "This itinerary will be deleted permanently!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        formElement.submit();
-      }
-    });
-    return false;
-  }
-
-  // Table Variables
-  let currentPage = 1;
-  let entriesPerPage = 10;
-  let allRows = [];
-  let filteredRows = [];
-
-  document.addEventListener('DOMContentLoaded', () => {
-    allRows = Array.from(document.querySelectorAll('#itineraryTable tbody tr'))
-      .filter(row => !row.querySelector('td[colspan]'));
-    filteredRows = [...allRows];
-    updateTable();
-  });
-
-  function changeEntries() {
-    entriesPerPage = parseInt(document.getElementById('entries').value);
-    currentPage = 1;
-    updateTable();
-  }
-  document.getElementById('searchInput').addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    filteredRows = allRows.filter(row => {
-      return Array.from(row.cells).some(cell => 
-        cell.textContent.toLowerCase().includes(query)
-      );
-    });
-    currentPage = 1;
-    updateTable();
-  }); 
-
-  function updateTable() {
-    // Hide all rows first
-    allRows.forEach(row => {
-      row.style.display = 'none';
-      row.classList.remove("hover:bg-gray-50"); // reset
-    });
-
-    const totalEntries = filteredRows.length;
-    const startIndex = (currentPage - 1) * entriesPerPage;
-    const endIndex = Math.min(startIndex + entriesPerPage, totalEntries);
-
-    // Show only visible rows & re-apply hover style
-    for (let i = startIndex; i < endIndex; i++) {
-      if (filteredRows[i]) {
-        filteredRows[i].style.display = 'table-row';
-        filteredRows[i].classList.add("hover:bg-gray-50", "transition-colors");
-      }
-    }
-
-    // Update entry info
-    document.getElementById('startEntry').textContent = totalEntries > 0 ? startIndex + 1 : 0;
-    document.getElementById('endEntry').textContent = endIndex;
-    document.getElementById('totalEntries').textContent = totalEntries;
-
-    // Update pagination
-    updatePagination(totalEntries);
-  }
-
-  function updatePagination(totalEntries) {
-    const totalPages = Math.ceil(totalEntries / entriesPerPage);
-    const paginationDiv = document.getElementById('pagination');
-    paginationDiv.innerHTML = '';
-
-    if (totalPages <= 1) return;
-
-    // Prev button
-    if (currentPage > 1) {
-      paginationDiv.innerHTML += `
-        <button onclick="changePage(${currentPage - 1})"
-          class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition">
-          <i class="fas fa-chevron-left"></i>
-        </button>`;
-    }
-
-    // Page numbers
-    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-      const activeClass = i === currentPage
-        ? 'bg-blue-500 text-white'
-        : 'bg-white text-gray-700 hover:bg-gray-100';
-      paginationDiv.innerHTML += `
-        <button onclick="changePage(${i})"
-          class="px-3 py-2 text-sm border border-gray-300 rounded-lg transition ${activeClass}">
-          ${i}
-        </button>`;
-    }
-
-    // Next button
-    if (currentPage < totalPages) {
-      paginationDiv.innerHTML += `
-        <button onclick="changePage(${currentPage + 1})"
-          class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition">
-          <i class="fas fa-chevron-right"></i>
-        </button>`;
-    }
-  }
-
-  function changePage(page) {
-    currentPage = page;
-    updateTable();
-  }
-</script>
-
+</div>
 </body>
 </html>
-
-<?php
-$stmt->close();
-$conn->close();
-?>

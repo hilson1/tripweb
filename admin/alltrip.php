@@ -53,7 +53,7 @@ if (!empty($searchTerm)) {
 }
 
 // Use the view instead of manual joins
-$sql = "SELECT tripid, title, departurefrom, groupsize, location, price, triptype, 
+$sql = "SELECT tripid, title, activity, groupsize, location, price, triptype, 
                main_image, side_image1, side_image2
         FROM trip_details_view
         $whereClause
@@ -173,7 +173,7 @@ $result = $stmt->get_result();
                     <i class="fas fa-image mr-2"></i>Preview
                   </th>
                   <th class="py-4 px-6 text-left font-semibold hidden-mobile">
-                    <i class="fas fa-plane-departure mr-2"></i>Departure
+                    <i class="fas fa-hiking mr-2"></i>Activity
                   </th>
                   <th class="py-4 px-6 text-left font-semibold hidden-mobile">
                     <i class="fas fa-tag mr-2"></i>Type
@@ -220,7 +220,7 @@ $result = $stmt->get_result();
                   </td>
                   <td class="py-4 px-6 hidden-mobile">
                     <span class="text-gray-700">
-                      <?php echo htmlspecialchars($trip["departurefrom"] ?? 'N/A'); ?>
+                      <?php echo htmlspecialchars($trip["activity"] ?? 'N/A'); ?>
                     </span>
                   </td>
                   <td class="py-4 px-6 hidden-mobile">

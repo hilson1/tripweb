@@ -37,7 +37,7 @@ $result = $stmt->get_result();
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trip Type Management - ThankYouNepalTrip</title>
+  <title>Trip-Type Management - ThankYouNepalTrip</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>

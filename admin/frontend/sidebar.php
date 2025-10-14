@@ -116,18 +116,6 @@
                   Create Activity
                 </a>
               </li>
-              <li>
-                <a href="activeactivities" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
-                  <i class="fas fa-check-circle mr-2 text-xs"></i>
-                  Active
-                </a>
-              </li>
-              <li>
-                <a href="expireactivities" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
-                  <i class="fas fa-clock mr-2 text-xs"></i>
-                  Expired
-                </a>
-              </li>
             </ul>
           </div>
         </li>
@@ -156,16 +144,32 @@
                   Create Destination
                 </a>
               </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- Trips Types Dropdown -->
+        <li>
+          <div x-data="{ open: false }">
+            <button @click="open = !open" class="nav-link flex items-center justify-between w-full p-3 rounded-lg text-white hover:text-white">
+              <div class="flex items-center">
+                <i class="fas fa-tags w-6 text-center mr-3"></i>
+                <span>Trips Types</span>
+              </div>
+              <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+            </button>
+            
+            <ul x-show="open" x-collapse class="submenu mt-1 ml-2 pl-4 rounded-lg space-y-1">
               <li>
-                <a href="activedestination" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
-                  <i class="fas fa-check-circle mr-2 text-xs"></i>
-                  Active
+                <a href="alltriptype" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-list mr-2 text-xs"></i>
+                  All Types
                 </a>
               </li>
               <li>
-                <a href="expiredestination" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
-                  <i class="fas fa-clock mr-2 text-xs"></i>
-                  Expired
+                <a href="createtriptype" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-plus-circle mr-2 text-xs"></i>
+                  Create Type
                 </a>
               </li>
             </ul>
@@ -191,9 +195,95 @@
                 </a>
               </li>
               <li>
-                <a href="Itineray" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                <a href="createitinerary" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
                   <i class="fas fa-plus-circle mr-2 text-xs"></i>
                   Create Itinerary
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+         <!-- Highlight Dropdown -->
+        <li>
+          <div x-data="{ open: false }">
+            <button @click="open = !open" class="nav-link flex items-center justify-between w-full p-3 rounded-lg text-white hover:text-white">
+              <div class="flex items-center">
+                <i class="fas fa-route w-6 text-center mr-3"></i>
+                <span>Highlight</span>
+              </div>
+              <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+            </button>
+            
+            <ul x-show="open" x-collapse class="submenu mt-1 ml-2 pl-4 rounded-lg space-y-1">
+              <li>
+                <a href="allhighlight" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-list mr-2 text-xs"></i>
+                  All Highlight
+                </a>
+              </li>
+              <li>
+                <a href="createhighlight" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-plus-circle mr-2 text-xs"></i>
+                  Create Highlight
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+         <!-- FAQ Dropdown -->
+        <li>
+          <div x-data="{ open: false }">
+            <button @click="open = !open" class="nav-link flex items-center justify-between w-full p-3 rounded-lg text-white hover:text-white">
+              <div class="flex items-center">
+                <i class="fas fa-route w-6 text-center mr-3"></i>
+                <span>FAQS</span>
+              </div>
+              <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+            </button>
+            
+            <ul x-show="open" x-collapse class="submenu mt-1 ml-2 pl-4 rounded-lg space-y-1">
+              <li>
+                <a href="allfaq" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-list mr-2 text-xs"></i>
+                  All Faqs
+                </a>
+              </li>
+              <li>
+                <a href="createfaq" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-plus-circle mr-2 text-xs"></i>
+                  Create Faqs
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- costs Dropdowm -->
+        <li>
+          <div x-data="{ open: false }">
+            <button @click="open = !open" 
+                    class="nav-link flex items-center justify-between w-full p-3 rounded-lg text-white hover:text-white">
+              <div class="flex items-center">
+                <i class="fas fa-money-bill-wave w-6 text-center mr-3"></i>
+                <span>Trip Costs</span>
+              </div>
+              <i class="fas fa-chevron-down text-xs transition-transform duration-200" 
+                :class="{ 'rotate-180': open }"></i>
+            </button>
+
+            <ul x-show="open" x-collapse class="submenu mt-1 ml-2 pl-4 rounded-lg space-y-1">
+              <li>
+                <a href="allcost" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-list mr-2 text-xs"></i>
+                  All Costs
+                </a>
+              </li>
+              <li>
+                <a href="createcost" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
+                  <i class="fas fa-plus-circle mr-2 text-xs"></i>
+                  Create Cost
                 </a>
               </li>
             </ul>
@@ -234,33 +324,7 @@
           </div>
         </li>
 
-        <!-- Trips Types Dropdown -->
-        <li>
-          <div x-data="{ open: false }">
-            <button @click="open = !open" class="nav-link flex items-center justify-between w-full p-3 rounded-lg text-white hover:text-white">
-              <div class="flex items-center">
-                <i class="fas fa-tags w-6 text-center mr-3"></i>
-                <span>Trips Types</span>
-              </div>
-              <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
-            </button>
-            
-            <ul x-show="open" x-collapse class="submenu mt-1 ml-2 pl-4 rounded-lg space-y-1">
-              <li>
-                <a href="alltriptype" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
-                  <i class="fas fa-list mr-2 text-xs"></i>
-                  All Types
-                </a>
-              </li>
-              <li>
-                <a href="createtriptype" class="submenu-link block py-2 px-3 rounded-md text-gray-200 hover:text-white">
-                  <i class="fas fa-plus-circle mr-2 text-xs"></i>
-                  Create Type
-                </a>
-              </li>
-            </ul>
-          </div>
-        </li>
+
       </ul>
     </nav>
     

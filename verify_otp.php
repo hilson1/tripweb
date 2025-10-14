@@ -1,44 +1,91 @@
 <?php
 session_start();
-require 'connection.php'; // Include database connection
+require 'connection.php'; // your DB connection
+require 'vendor/autoload.php'; // PHPMailer autoload
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 $FailMsg = "";
 
-// Check if signup data exists in the session
-if (!isset($_SESSION['signup_data'])) {
-    header('location: signup.php'); // Redirect if no signup data is found
-    exit();
+// Step 1: Handle first visit (send OTP)
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['email']) && !isset($_POST['otp'])) {
+    $email = trim($_POST['email']);
+    $phone = trim($_POST['phone']);
+    $username = trim($_POST['username']);
+    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+
+    // Generate OTP and store signup data in session
+    $otp = rand(100000, 999999);
+    $_SESSION['signup_data'] = [
+        'email' => $email,
+        'phone' => $phone,
+        'username' => $username,
+        'password' => $password,
+        'otp' => $otp
+    ];
+
+    // Send OTP email via cPanel SMTP
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = 'mail.thankyounepaltrip.com'; // cPanel mail host
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'info@thankyounepaltrip.com';
+        $mail->Password   = 'T@1234@!@#FGahNep';
+        $mail->SMTPSecure = 'ssl'; // or 'tls' if port 587
+        $mail->Port       = 465;   // or 587
+
+        $mail->setFrom('info@thankyounepaltrip.com', 'Thank You Nepal Trip');
+        $mail->addAddress($email);
+        $mail->isHTML(true);
+        $mail->Subject = 'Your OTP Code - Thank You Nepal Trip';
+        $mail->Body    = "<p>Dear user,</p>
+        <p>Your One-Time Password (OTP) is: <strong>$otp</strong>.</p>
+        <p>This code will expire in 10 minutes. Please do not share it with anyone.</p>
+        <p>Regards,<br>Thank You Nepal Trip Team</p>";
+        $mail->AltBody = "Your OTP code is $otp. It expires in 10 minutes.";
+
+
+        $mail->send();
+    } catch (Exception $e) {
+        $FailMsg = "Error sending OTP: " . $mail->ErrorInfo;
+    }
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Step 2: Handle OTP verification
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['otp'])) {
+    if (!isset($_SESSION['signup_data'])) {
+        header('location: signup.php');
+        exit();
+    }
+
     $user_otp = trim($_POST['otp']);
     $stored_otp = $_SESSION['signup_data']['otp'];
 
     if ($user_otp == $stored_otp) {
-        // OTP is correct, proceed with user creation
+        // OTP correct → create user
         $userid = uniqid('user_');
         $phone = $_SESSION['signup_data']['phone'];
         $email = $_SESSION['signup_data']['email'];
         $username = $_SESSION['signup_data']['username'];
         $hashed_password = $_SESSION['signup_data']['password'];
 
-        $sql = "INSERT INTO users (userid, phone_number, email, user_name, password) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO users (userid, phone_number, email, user_name, password)
+                VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssss", $userid, $phone, $email, $username, $hashed_password);
 
         if ($stmt->execute()) {
-            // User created successfully, clear session data
             unset($_SESSION['signup_data']);
-            // Redirect to login or index page
             header('location: login.php?msg=success');
             exit();
         } else {
-            $FailMsg = "Account creation failed. Please try again.";
+            $FailMsg = "Account creation failed.";
         }
 
         $stmt->close();
         $conn->close();
-
     } else {
         $FailMsg = "Invalid OTP. Please try again.";
     }
@@ -48,80 +95,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify OTP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
-    <link rel="stylesheet" href="index.css">
-    <style>
-        .login-container {
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .login-container h2 {
-            margin-bottom: 20px;
-            font-weight: 500;
-            font-size: 24px;
-            text-align: center;
-        }
-
-        .login-container label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .login-container input[type="text"],
-        .login-container input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .login-container .login-button {
-            width: 100%;
-            padding: 10px;
-            background-color: #00bfa5;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .error {
-            color: red;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify OTP</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<style>
+.login-container {margin:40px auto;padding:40px;max-width:400px;background:#fff;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
+.login-container h2 {text-align:center;margin-bottom:20px;}
+</style>
 </head>
+<body>
 <?php include("frontend/header.php"); ?>
+
 <div class="login-container">
     <h2>Verify OTP</h2>
-    <form method="post">
-        <p>An OTP has been sent to your email address: **<?php echo htmlspecialchars($_SESSION['signup_data']['email']); ?>**</p>
-        <span style="color: red; font-size: 20px;"><?php echo $FailMsg; ?></span>
-        <label for="otp">Enter OTP</label>
-        <input type="text" id="otp" name="otp" placeholder="Enter OTP" required>
-        <button type="submit" class="login-button">Verify OTP</button>
-    </form>
+    <?php if (isset($_SESSION['signup_data'])): ?>
+        <form method="post">
+            <p>OTP sent to: <strong><?php echo htmlspecialchars($_SESSION['signup_data']['email']); ?></strong></p>
+            <p style="color:red;"><?php echo $FailMsg; ?></p>
+            <label for="otp">Enter OTP</label>
+            <input type="text" id="otp" name="otp" class="form-control mb-3" placeholder="Enter OTP" required>
+            <button type="submit" class="btn btn-success w-100">Verify OTP</button>
+        </form>
+    <?php else: ?>
+        <p>No signup session found.</p>
+    <?php endif; ?>
 </div>
-<?php
-include("frontend/footer.php");
-include("frontend/scrollup.html");
-?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<?php include("frontend/footer.php"); ?>
 </body>
 </html>

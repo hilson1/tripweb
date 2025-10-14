@@ -1,3 +1,6 @@
+/* =====================
+   Gallery & Modal
+===================== */
 .gallery img {
   width: 150px;
   cursor: pointer;
@@ -5,24 +8,17 @@
   margin: 5px;
 }
 
-/* Custom modal size */
 .modal-dialog {
   max-width: 80%;
-  /* Increase the width of the modal */
   max-height: 90vh;
-  /* Increase the height of the modal */
 }
 
-/* Ensure the modal image fits within the modal */
 .modal-body img {
   max-width: 100%;
   max-height: 70vh;
-  /* Adjust based on your needs */
   object-fit: contain;
-  /* Ensures the image fits without distortion */
 }
 
-/* Adjust the close button position */
 .btn-close {
   position: absolute;
   top: 10px;
@@ -30,8 +26,56 @@
   z-index: 1;
 }
 
+/* =====================
+   cost section
+===================== */
+
+/* COST SECTION */
+#cost {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+#cost h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #222;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+#cost h3 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.include-item {
+  color: #28a745; /* green */
+  font-weight: 500;
+}
+
+.exclude-item {
+  color: #dc3545; /* red */
+  font-weight: 500;
+}
+
+#cost i {
+  margin-right: 6px;
+}
+
+/* =====================
+   Trip Info Layout
+===================== */
 .img-fluid {
-  width: 1000px;
+  width: 100%;
+  max-width: 1000px;
   margin-bottom: 20px;
 }
 
@@ -42,11 +86,10 @@
 }
 
 .trip-facts {
-  width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-row-gap: 20px;
-  grid-column-gap: 100px;
+  gap: 20px 100px;
+  width: 100%;
 }
 
 #fact-icon {
@@ -54,13 +97,16 @@
   margin-right: 5px;
 }
 
+/* =====================
+   Itinerary Menu
+===================== */
 .itinery-menu {
   border-bottom: 1px solid gray;
   padding: 10px 20px 10px 10px;
   margin-top: 20px;
-  width: 100%;
   display: flex;
   gap: 4rem;
+  width: 100%;
 }
 
 .itinery-menu a {
@@ -72,23 +118,26 @@
   margin-top: 10px;
 }
 
+/* Sticky header on scroll */
 .sticky-menu {
-  margin-top: 70px;
-  height: 40px;
-  justify-content: center;
-  align-items: center;
-  border: none;
-  z-index: 9;
-  transition: all 0s ease-in-out;
   position: fixed;
   top: 0;
   left: 0;
+  margin-top: 70px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: white;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-  /* Optional: Adds a shadow */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   padding: 15px;
+  z-index: 9;
+  transition: all 0s ease-in-out;
 }
 
+/* =====================
+   Icons
+===================== */
 #check-icon {
   color: green;
   margin-right: 10px;
@@ -99,34 +148,24 @@
   margin-right: 10px;
 }
 
+/* =====================
+   FAQ & Itinerary Containers
+===================== */
 .faq-head {
   display: flex;
   justify-content: space-between;
 }
 
-.itinerary-container {
-  background-color: none;
-  max-width: 100%;
-
-  border-radius: 8px;
-  overflow: hidden;
-}
-
+.itinerary-container,
 .faq-container {
-  background-color: none;
   max-width: 100%;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.itinerary-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  font-weight: bold;
-}
-
+/* =====================
+   Toggle Switch
+===================== */
 .toggle-container {
   display: flex;
   align-items: center;
@@ -167,37 +206,67 @@
   left: 22px;
 }
 
-/* .day {} */
+/* =====================
+   Itinerary Accordion
+===================== */
+.itinerary-section {
+  margin: 2rem 0;
+}
+
+.day {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.day:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
 
 .day-header {
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  background: #f8f9fa;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  font-weight: bold;
-  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.day-header strong {
+  color: #007bff;
 }
 
 .day-content {
   max-height: 0;
   overflow: hidden;
-  padding: 0 15px;
-  background: #fff;
-  transition: max-height 0.5s ease-in-out, padding 0.3s ease-in-out;
+  opacity: 0;
+  padding: 0 1.25rem;
+  transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.25s ease;
 }
 
-.expanded .day-content {
-  padding: 10px 15px;
+.day.expanded .day-content {
+  opacity: 1;
+  padding: 1rem 1.25rem;
 }
 
 .icon {
   transition: transform 0.3s ease;
+  font-size: 1.2rem;
 }
 
-.expanded .icon {
+.day.expanded .icon {
   transform: rotate(180deg);
 }
 
+/* =====================
+   Map & Enquiry Form
+===================== */
 iframe {
   width: 100%;
   height: 400px;
@@ -209,6 +278,7 @@ iframe {
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  padding: 20px;
 }
 
 .enquiry-container h1 {
@@ -257,9 +327,12 @@ input[type="submit"] {
 }
 
 input[type="submit"]:hover {
-  background-color: #008080;
+  background-color: #f4a261;
 }
 
+/* =====================
+   Card Grid & Buttons
+===================== */
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -274,23 +347,34 @@ input[type="submit"]:hover {
 .price-head {
   background-color: #008080;
   text-align: center;
-  text-decoration: none;
-  width: 100%;
   color: white;
   padding: 10px;
   height: 50px;
-  border-radius: 10px 10px 0px 0px;
+  border-radius: 10px 10px 0 0;
+}
+
+.pricing-btn {
+  display: inline-block;
+  background-color: #008080;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  text-align: center;
+}
+.pricing-btn:hover {
+  background-color: #006666;
 }
 
 .action a:nth-child(1) {
   background-color: #008080;
   text-align: center;
   text-decoration: none;
-  width: 100%;
   color: white;
   padding: 10px;
   height: 50px;
-  border-radius: 0px 0px 10px 10px;
+  width: full;
+  border-radius: 0 0 10px 10px;
 }
 
 .action a:nth-child(1):hover {
@@ -301,16 +385,14 @@ input[type="submit"]:hover {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  background-color: none;
 }
 
 .card {
   border: none;
   border-radius: 10px;
   max-width: 400px;
-  max-height: fit-content;
-
   margin: auto;
+  transition: box-shadow 0.3s ease;
 }
 
 .card:hover {
@@ -344,31 +426,34 @@ input[type="submit"]:hover {
   color: #fff;
   font-weight: bold;
   border-radius: 5px;
+  border: none;
 }
 
 .btn-view-details:hover {
   background-color: #e96b0c;
 }
 
-.next-departure {
-  font-size: 14px;
-  color: #6c757d;
+#view-details-link a {
+  display: inline-block;
+  padding: 10px;
+  color: white;
+  border-radius: 5px;
+  text-decoration: none;
+  background-color: orange;
 }
 
-.wishlist-icon {
-  color: #dc3545;
-  font-size: 20px;
+#view-details-link a:hover {
+  background-color: #008080;
 }
 
-.card-contents {
-  text-align: left;
-}
-
+/* =====================
+   Carousel
+===================== */
 .carousel {
   position: relative;
   width: 100%;
   overflow: hidden;
-  border-radius: 5px 5px 0px 0px;
+  border-radius: 5px 5px 0 0;
 }
 
 .carousel-container {
@@ -381,65 +466,21 @@ input[type="submit"]:hover {
   display: none;
 }
 
-.active {
+.slide.active {
   display: block;
 }
 
-#card-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  /* 3 columns */
-  gap: 20px;
-  /* Spacing between grid items */
-
-  background-color: #f4f4f4;
-}
-
-/* view more trips */
-.btn-custom {
-  border: 1px solid #f4a261;
-  color: #f4a261;
-  background-color: transparent;
-  padding: 10px 20px;
-  font-size: 14px;
-}
-
-.btn-custom:hover {
-  background-color: #f4a261;
-  color: white;
-}
-
-#view-details-link a {
-  padding: 10px;
-  color: white;
-  border-radius: 5px;
-  text-decoration: none;
-  background-color: orange;
-}
-
-#view-details-link a:hover {
-  background-color: #008080;
-}
-
-.check-ins {
-  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-  border-radius: 10px;
-  margin: 10px;
-}
-
+/* =====================
+   Responsive
+===================== */
 @media (max-width: 768px) {
   .gallery .mainimg img {
     width: 330px !important;
     height: 200px !important;
   }
+
   .gallery .sideimg img {
     display: none;
-  }
-
-  .check-ins {
-    height: max-content;
-    width: 100%;
-    margin: 0 auto;
   }
 
   .enquiry-container {
@@ -464,6 +505,7 @@ input[type="submit"]:hover {
     display: flex;
     flex-direction: column;
   }
+
   .trip-fact-right {
     display: none;
   }
@@ -478,11 +520,8 @@ input[type="submit"]:hover {
   }
 
   .trip-facts {
-    width: 100%;
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-row-gap: 20px;
-    grid-column-gap: 40px;
+    gap: 20px 40px;
   }
 
   .itinery-menu {
@@ -493,10 +532,126 @@ input[type="submit"]:hover {
     grid-template-columns: 1fr;
   }
 
-  .side-trip-facts {
+  .side-trip-facts,
+  .sideimg img {
     display: none !important;
   }
-  .sideimg img {
-    display: none;
+}
+
+/* =====================
+   Responsive
+===================== */
+@media (max-width: 480px) {
+  .trip-facts {
+    grid-template-columns: 1fr;
+    gap: 20px 0;
+  }
+
+  .itinery-menu {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+/* === Related Trips Section === */
+.features h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  color: #222;
+}
+
+/* Grid container */
+#card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  background-color: transparent;
+}
+
+/* Card styling */
+.card {
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Card image */
+.card img {
+  height: 220px;
+  width: 100%;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+/* Card content */
+.card-body {
+  padding: 20px;
+  text-align: left;
+}
+
+.card-body h5 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 10px;
+}
+
+.card-body p {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.card-body i {
+  color: green;
+  margin-right: 8px;
+}
+
+/* Price + Button */
+.card-body .fw-bold {
+  font-size: 1.2rem;
+  color: #000;
+}
+
+.card-body .btn {
+  background-color: #f4a261;
+  border: none;
+  color: white;
+  font-weight: 600;
+  border-radius: 5px;
+  padding: 10px 15px;
+  transition: background 0.3s ease;
+}
+
+.card-body .btn:hover {
+  background-color: #008080;
+}
+
+/* Responsive grid */
+@media (max-width: 992px) {
+  .col-md-4 {
+    width: 48% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #card-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .col-md-4 {
+    width: 100% !important;
+  }
+  .card img {
+    height: 180px;
   }
 }

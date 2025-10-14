@@ -73,7 +73,7 @@
     ?>
 
     <header class="hero">
-        <h1>Welcome</h1>
+        <h1>WELCOME</h1>
         <p>Your trusted partner for unforgettable journeys around the globe.</p>
     </header>
 

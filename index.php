@@ -86,10 +86,10 @@ $result_destinations = $conn->query($sql_destinations);
                     <div class="mb-3 input-group">
                         <span class="input-group-text"><i class="fas fa-clock" id="search-icon"></i></span>
                         <select class="form-select" aria-label="Duration" name="duration">
-                            <option selected>0 Days - 11 Days</option>
-                            <option value="1-3">1 Day - 3 Days</option>
-                            <option value="4-7">4 Days - 7 Days</option>
-                            <option value="8-11">8 Days - 11 Days</option>
+                            <option selected>2 Days</option>
+                            <option value="1-3">2 Day - 6 Days</option>
+                            <option value="4-7">2 Days - 14 Days</option>
+                            <option value="8-11">14 Days - more</option>
                         </select>
                     </div>
                     <div class="mb-3 input-group">
@@ -135,7 +135,7 @@ $result_destinations = $conn->query($sql_destinations);
     </div>
 
     <!-- popular trips -->
-   <div class="features">
+    <div class="features">
         <div class="container text-center py-5">
             <h1>Explore popular trips</h1>
             <p>Get started with handpicked top-rated trips designed to inspire your next adventure.</p>
@@ -208,10 +208,7 @@ $result_destinations = $conn->query($sql_destinations);
             </div>
         </div>
     </div>
-
-
-
-
+    
     <!-- popular destinations -->
     <div class="features">
         <div class="container text-center py-5 ">

@@ -1,9 +1,15 @@
 <?php
 include("frontend/session_start.php");
-require 'connection.php'; // Include your database connection file
-$description = "";
+require 'connection.php'; // Database connection
+
+$trip = [];
+$images = [];
+$relatedTrips = [];
+
 if (isset($_GET['tripid'])) {
-    $tripid = $_GET['tripid'];
+    $tripid = intval($_GET['tripid']);
+
+    // --- Fetch trip details ---
     $sql = "SELECT * FROM trip_details_view WHERE tripid = ?";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -14,10 +20,42 @@ if (isset($_GET['tripid'])) {
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
         $trip = $result->fetch_assoc();
+    } else {
+        die("Trip not found.");
     }
-}
+    $stmt->close();
 
+    // --- Fetch all trip images ---
+    $img_sql = "SELECT main_image FROM trip_images WHERE tripid = ?";
+    $stmt = $conn->prepare($img_sql);
+    $stmt->bind_param("i", $tripid);
+    $stmt->execute();
+    $img_result = $stmt->get_result();
+    while ($row = $img_result->fetch_assoc()) {
+        $images[] = $row['main_image'];
+    }
+    $stmt->close();
+
+    // --- Fetch related trips ---
+    $activity = $trip['activity'];
+    $location = $trip['location'];
+    $sql_related = "SELECT tripid, title, main_image, location, duration, groupsize, price, description 
+                    FROM trip_details_view 
+                    WHERE (activity = ? OR location = ?) 
+                    AND tripid != ? 
+                    ORDER BY RAND() 
+                    LIMIT 6";
+    $stmt = $conn->prepare($sql_related);
+    $stmt->bind_param("ssi", $activity, $location, $tripid);
+    $stmt->execute();
+    $related_result = $stmt->get_result();
+    while ($row = $related_result->fetch_assoc()) {
+        $relatedTrips[] = $row;
+    }
+    $stmt->close();
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,7 +63,7 @@ if (isset($_GET['tripid'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>View Trip | ThankYouNepalTrip</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
     <link rel="stylesheet" href="index.css">
@@ -38,7 +76,10 @@ if (isset($_GET['tripid'])) {
     ?>
     <div class="features">
         <div class="container py-5">
+
+        <!-- Images containers -->
             <div class="trip-image-container">
+
                 <!-- Product Images -->
                 <div class="gallery"
                     style="display: flex; flex-wrap: wrap; align-items:center; justify-content: space-around;">
@@ -91,9 +132,13 @@ if (isset($_GET['tripid'])) {
                     }
                 </script>
             </div>
+
+            
             <div class="features">
                 <div class="container py-5">
-                    <div class="viewtrip-container" style="width: 100%; display: flex; justify-content: space-between;">
+                    <div class="viewtrip-container" style="width: 100%; display: flex; justify-content: space-between; font-size: 1.2rem;">
+                       
+                        <!-- descriptions of trip -->
                         <div class="trip-info" style="width:68%">
                             <div class="trip-heading" style="display: flex;">
                                 <h1>"<?php echo $trip['title']; ?>"</h1>
@@ -106,13 +151,12 @@ if (isset($_GET['tripid'])) {
                                 </div>
                             </div>
                             <div class="trip-facts" id="menu">
-                                <div class="flex items-center" ">
+                                <div class="flex items-center">
                                     <div><i class=" fas fa-bus text-teal-500 mr-2" id="fact-icon"></i>
                                     <span>Transportation</span>
                                 </div>
                                 <div class=""><span><?php echo $trip['transportation']; ?></span></div>
                             </div>
-
                             <div class="flex items-center">
                                 <div><i class="fas fa-hotel text-teal-500 mr-2"
                                         id="fact-icon"></i><span>Accomodation</span>
@@ -179,7 +223,27 @@ if (isset($_GET['tripid'])) {
                                 </div>
                                 <div class=""><span><?php echo $trip['maximumage']; ?></span></div>
                             </div>
+                            <div class="flex items-center">
+                                <div>
+                                    <i class="fas fa-hiking text-teal-500 mr-2" id="fact-icon"></i>
+                                    <span>Activity</span>
+                                </div>
+                                <div class="">
+                                    <span><?php echo htmlspecialchars($trip['activity'] ?? 'N/A'); ?></span>
+                                </div>
+                            </div>
+                          <div class="flex items-center">
+                                <div>
+                                    <i class="fas fa-map-marker-alt text-teal-500 mr-2" id="fact-icon"></i>
+                                    <span>Location</span>
+                                </div>
+                                <div class="">
+                                    <span><?php echo htmlspecialchars($trip['location'] ?? 'N/A'); ?></span>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- iteration menu -->
                         <div class="itinery-menu">
                             <a href="#menu" onclick="setActiveMenuItem(0)">Overview</a>
                             <a href="#overview" onclick="setActiveMenuItem(1)">Itinerary</a>
@@ -187,147 +251,147 @@ if (isset($_GET['tripid'])) {
                             <a href="#cost" onclick="setActiveMenuItem(3)">FAQs</a>
                             <a href="#faqs" onclick="setActiveMenuItem(4)">Map</a>
                         </div>
+
+                        <!-- overview and highlight of trip -->
                         <div class="overview" id="overview">
-                            <h2>Overview</h2>
-                            <p><?php echo $trip['description']; ?>
-                            </p>
-                            <h2>
-                                Hightlights
-                            </h2>
-                            <i class="fas fa-check" id="check-icon"></i><span>Treck to
-                                the world-famous Everest Base
-                                Camp</span><br>
-                            <i class="fas fa-check" id="check-icon"></i><span>Treck to the world-famous Everest Base
-                                Camp</span><br>
-                            <i class="fas fa-check" id="check-icon"></i><span>Treck to the world-famous Everest Base
-                                Camp</span><br>
-                        </div>
-                        <div class="itinerary" id="itinerary">
-                            <div class="itinerary-container">
-                                <div class="itinerary-header">
-                                    <span>
-                                        <h1>Itinerary</h1>
-                                    </span>
-                                    <div class="toggle-container">
-                                        <label class="toggle-label">Expand All</label>
-                                        <div class="toggle-switch" onclick="toggleAll()"></div>
-                                    </div>
-                                </div>
-
-                                <div class="day">
-                                    <div class="day-header" onclick="toggleDay(this)">
-                                        <span><strong>Day 1: Kathmandu to Pokhara (By flight or Bus)</strong></span>
-                                        <span class="icon">⌄</span>
-                                    </div>
-                                    <div class="day-content">
-                                        <p>Arrive at Tribhuwan International Airport, Kathmandu. You are welcomed by
-                                            the
-                                            team and then transferred
-                                            to your hotel. This trail goes through Ghorepani Poon Hill.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="day">
-                                    <div class="day-header" onclick="toggleDay(this)">
-                                        <span><strong>Day 2: Drive to Nayapul and trek to Ulleri</strong></span>
-                                        <span class="icon">⌄</span>
-                                    </div>
-                                    <div class="day-content">
-                                        <p> Drive to Nayapul and begin your trek Lorem ipsum dolor, sit amet
-                                            consectetur
-                                            adipisicing elit. Suscipit molestiae libero similique ratione laboriosam
-                                            alias
-                                            neque exercitationem officia, fuga voluptates facere a dignissimos rerum
-                                            accusamus blanditiis molestias aliquid quos esse! to Ulleri, passing
-                                            through
-                                            lush
-                                            landscapes
-                                            and small villages.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="day">
-                                    <div class="day-header" onclick="toggleDay(this)">
-                                        <span><strong>Day 3: Trek to Ghorepani</strong></span>
-                                        <span class="icon">⌄</span>
-                                    </div>
-                                    <div class="day-content">
-                                        <p>
-                                            Continue your trek through rhododendron forests to reach the beautiful
-                                            village
-                                            of Ghorepani.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="day">
-                                    <div class="day-header" onclick="toggleDay(this)">
-                                        <span><strong>Day 4: Early trek to Poon Hill, Back to Ghorepani and trek to
-                                                Tadapani</strong></span>
-                                        <span class="icon">⌄</span>
-                                    </div>
-                                    <div class="day-content">
-                                        <p>
-                                            An early morning trek to Poon Hill for a breathtaking sunrise view, then
-                                            return
-                                            to Ghorepani and proceed
-                                            to Tadapani.
-                                        </p>
-                                    </div>
-                                </div>
+                            <!-- overview of trip -->
+                            <!-- Overview Section -->
+                            <div class="itinerary-header">
+                            <span><h1>Overview</h1></span>
                             </div>
+                            <p><?= nl2br(htmlspecialchars($trip['description'] ?? 'No overview available.')) ?></p>
 
-
+                            <!-- Highlights Section -->
+                            <div class="itinerary-header">
+                            <span><h1>Highlights</h1></span>
+                            </div>
+                            <div class="highlite" style="margin:10px 0; padding-bottom:2rem; padding-left:10px;">
+                                <?php
+                                // Loop through all highlight_title columns
+                                for ($i = 1; $i <= 6; $i++) {
+                                    $key = "highlight_title{$i}";
+                                    if (!empty($trip[$key])) {
+                                        echo '<i class="fas fa-check" id="check-icon"></i> ';
+                                        echo '<span>' . htmlspecialchars($trip[$key]) . '</span><br>';
+                                    }
+                                }
+                                ?>
+                            </div>
                         </div>
 
-                        <div class="cost" id="cost">
-                            <h1>Cost</h1>
-                            <h3>
-                                The Cost Includes
-                            </h3>
-                            <?php for ($i = 0; $i < 5; $i++) { ?>
-
-                                <i class="fas fa-check" id="check-icon"></i><span>Pick-up or Drop-off service from and
-                                    to Airport(in our own vehicle)</span><br>
-
-                            <?php } ?>
-                            <br><br>
-                            <h3>The Cost Excludes</h3>
-                            <?php for ($i = 0; $i < 5; $i++) { ?>
-
-                                <i class="fas fa-times" id="cross-icon"></i><span>Pick-up or
-                                    Drop-off service from
-                                    and
-                                    to Airport(in our own vehicle)</span><br>
-                            <?php } ?>
-
-                        </div>
-                        <div class="dates" id="dates">
-
-                        </div>
-                        <div class="faqs" id="faqs">
-                            <div class="faq-container">
-                                <div class="itinerary-header">
-                                    <span>
-                                        <h1>FAQ's</h1>
-                                    </span>
-                                </div>
-                                <?php for ($i = 0; $i < 5; $i++) { ?>
+                        <!-- itinery of trip -->
+                        <div class="itinerary-section" id="itinerary">
+                            <div class="itinerary-header">
+                                <span><h1>Itinerary</h1></span>
+                            </div>      
+                            <?php if (!empty($trip)): ?>
+                                <?php for ($i = 1; $i <= 6; $i++):
+                                $title = $trip["itinerary_title$i"] ?? '';
+                                $desc  = $trip["itinerary_desc$i"] ?? '';
+                                // normalize and trim
+                                $title = trim((string)$title);
+                                $desc  = trim((string)$desc);
+                                if ($title !== ''): ?>
                                     <div class="day">
-                                        <div class="day-header" onclick="toggleDay(this)">
-                                            <span><strong>How to Book Trip</strong></span>
-                                            <span class="icon">⌄</span>
-                                        </div>
-                                        <div class="day-content">
-                                            <p>Use the form</p>
-                                        </div>
+                                    <div class="day-header" onclick="toggleDay(this)">
+                                        <span><strong><?= htmlspecialchars($title) ?></strong></span>
+                                        <span class="icon">⌄</span>
                                     </div>
-                                <?php } ?>
 
-                            </div>
+                                    <div class="day-content">
+                                        <?php if ($desc !== ''): ?>
+                                        <!-- preserve line breaks -->
+                                        <p><?= nl2br(htmlspecialchars($desc)) ?></p>
+                                        <?php else: ?>
+                                        <p><em>No description available.</em></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    </div>
+                                <?php endif; endfor; ?>
+                            <?php else: ?>
+                                <p>No itinerary data found for this trip.</p>
+                            <?php endif; ?>
                         </div>
+
+                        <!-- cost of trip -->
+                        <div class="cost" id="cost">
+                            <div class="itinerary-header">
+                                <span><h1>Costs</h1></span>
+                            </div>
+                            <?php if (!empty($trip)): ?>
+
+                                <h3><?= htmlspecialchars($trip['cost_includes'] ?? 'The Cost Includes') ?></h3>
+                                <?php for ($i = 1; $i <= 6; $i++):
+                                    $include = $trip["include_title$i"] ?? '';
+                                    if (!empty($include)): ?>
+                                        <i class="fas fa-check include-item"></i>
+                                        <span class="include-item"><?= htmlspecialchars($include) ?></span><br>
+                                <?php endif; endfor; ?>
+
+                                <br><br>
+
+                                <h3><?= htmlspecialchars($trip['cost_excludes'] ?? 'The Cost Excludes') ?></h3>
+                                <?php for ($i = 1; $i <= 6; $i++):
+                                    $exclude = $trip["exclude_title$i"] ?? '';
+                                    if (!empty($exclude)): ?>
+                                        <i class="fas fa-times exclude-item"></i>
+                                        <span class="exclude-item"><?= htmlspecialchars($exclude) ?></span><br>
+                                <?php endif; endfor; ?>
+
+                            <?php else: ?>
+                                <p>No cost data found for this trip.</p>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="dates" id="dates"></div>
+
+                        <!-- faqs for trip -->
+                        <div class="faqs" id="faqs">
+                        <div class="faq-header">
+                            <h1>FAQ's</h1>
+                        </div>
+
+                        <?php
+                        $tripid = $trip['tripid'] ?? null;
+
+                        if ($tripid) {
+                            $faqQuery = $conn->prepare("SELECT question, answer FROM trip_faqs WHERE tripid = ? ORDER BY faqid ASC");
+                            $faqQuery->bind_param("i", $tripid);
+                            $faqQuery->execute();
+                            $faqs = $faqQuery->get_result();
+
+                            if ($faqs->num_rows > 0): ?>
+                                <?php while ($faq = $faqs->fetch_assoc()): ?>
+                                <div class="day">
+                                    <div class="day-header" onclick="toggleDay(this)">
+                                    <span><strong><?= htmlspecialchars($faq['question']) ?></strong></span>
+                                    <span class="icon">⌄</span>
+                                    </div>
+                                    <div class="day-content">
+                                    <?php if (!empty(trim($faq['answer']))): ?>
+                                        <p><?= nl2br(htmlspecialchars($faq['answer'])) ?></p>
+                                    <?php else: ?>
+                                        <p><em>No answer available.</em></p>
+                                    <?php endif; ?>
+                                    </div>
+                                </div>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <p>No FAQ data found for this trip.</p>
+                            <?php endif;
+                        } else {
+                            echo "<p>Invalid trip selected.</p>";
+                        }
+                        ?>
+                        </div>
+                        <script>
+                            function toggleDay(header) {
+                            const day = header.parentElement;
+                            day.classList.toggle('expanded');
+                            }
+                        </script>
+
+                        <!-- map of trip -->
                         <div class="map" id="map">
                             <h1>Map</h1><br>
                             <iframe
@@ -335,75 +399,139 @@ if (isset($_GET['tripid'])) {
                                 allowfullscreen="" loading="fast" referrerpolicy="no-referrer-when-downgrade">
                             </iframe>
                         </div>
-                        <div class="review" id="review"></div>
-                        <div class="enquiry-form" id="enquiry-form">
+
+
+                        <!--  enquiry  -->
+                    <div class="enquiry-form" id="enquiry-form">
+                        <div class="itinerary-header">
                             <h1>Enquiry Form</h1>
-                            <div class="enquiry-container">
-                                <h1>You can send your enquiry via the form below.</h1>
-                                <form id="enquiryForm" action="https://api.web3forms.com/submit" method="POST">
-                                    <input type="hidden" name="access_key" value="8789583e-fd9e-44e5-a6e8-e265ceec0848">
-                                    <label for="trip-name">Trip name: <span style="color: red;">*</span></label>
-                                    <input type="text" id="name" name="trip-name" placeholder="Enter Your Name *"
-                                        required value="Ghorepani Poon Hill Trek">
-                                    <label for="name">Your name: <span style="color: red;">*</span></label>
-                                    <input type="text" id="name" name="name" placeholder="Enter Your Name *" required>
-                                    <label for="email">Your email: <span style="color: red;">*</span></label>
-                                    <input type="email" id="email" name="email" placeholder="Enter Your Email *"
-                                        required>
+                        </div>
 
-                                    <div class="row">
-                                        <div class="col-half">
-                                            <label for="country">Country <span style="color: red;">*</span></label>
-                                            <select id="country" name="country" required onchange="adjustInputSize()">
-                                                <option value="">Choose a country*</option>
-                                                <option value="USA">United States of America</option>
-                                                <option value="UK">United Kingdom</option>
-                                                <option value="Canada">Canada</option>
-                                                <option value="Australia">Australia</option>
-                                                <option value="Germany">Germany</option>
-                                                <option value="France">France</option>
-                                                <option value="Japan">Japan</option>
-                                                <option value="India">India</option>
-                                                <option value="China">China</option>
-                                                <option value="Brazil">Brazil</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-half">
-                                            <label for="contact-number">Contact number: <span
-                                                    style="color: red;">*</span></label>
-                                            <input type="text" id="contact-number" name="contact-number"
-                                                placeholder="Enter Your Contact Number*" required>
-                                        </div>
-                                    </div>
+                        <div class="enquiry-container">
+                            <h2>You can send your enquiry via the form below.</h2>
 
-                                    <div class="row">
-                                        <div class="col-half">
-                                            <label for="adults">No. of Adults <span style="color: red;">*</span></label>
-                                            <input type="number" id="adults" name="adults"
-                                                placeholder="Enter Number of Adults*" required>
-                                        </div>
-                                        <div class="col-half">
-                                            <label for="children">No. of children</label>
-                                            <input type="number" id="children" name="children"
-                                                placeholder="Enter Number of Children">
-                                        </div>
-                                    </div>
+                            <form id="enquiryForm" action="https://api.web3forms.com/submit" method="POST">
+                            <input type="hidden" name="access_key" value="8789583e-fd9e-44e5-a6e8-e265ceec0848">
 
-                                    <label for="subject">Enquiry Subject: <span style="color: red;">*</span></label>
-                                    <input type="text" id="subject" name="subject" placeholder="Enquiry Subject"
-                                        required>
+                            <!-- remove redirect -->
+                            <!-- <input type="hidden" name="redirect" value="https://thankyounepaltrip.com/thank-you.html"> -->
 
-                                    <label for="message">Your Message <span style="color: red;">*</span></label>
-                                    <textarea id="message" name="message" rows="5" placeholder="Enter Your message*"
-                                        required></textarea>
+                            <input type="hidden" name="email" value="info@thankyounepaltrip.com">
 
-                                    <input type="submit" value="Send Email">
-                                </form>
+                            <label for="trip-name">Trip name: <span style="color: red;">*</span></label>
+                            <input type="text" id="trip-name" name="trip-name" placeholder="Trip Name *"
+                                required value="<?= htmlspecialchars($trip['title'] ?? '') ?>">
+
+                            <label for="name">Your name: <span style="color: red;">*</span></label>
+                            <input type="text" id="name" name="name" placeholder="Enter Your Name *" required>
+
+                            <label for="email">Your email: <span style="color: red;">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="Enter Your Email *" required>
+
+                            <div class="row">
+                                <div class="col-half">
+                                <label for="country">Country <span style="color: red;">*</span></label>
+                                <select id="country" name="country" required>
+                                    <option value="">Choose a country*</option>
+                                    <option>India</option>
+                                    <option>China</option>
+                                    <option>United States of America</option>
+                                    <option>United Kingdom</option>
+                                    <option>Thailand</option>
+                                    <option>South Korea</option>
+                                    <option>Australia</option>
+                                    <option>Germany</option>
+                                    <option>France</option>
+                                    <option>Japan</option>
+                                    <option>Sri Lanka</option>
+                                    <option>Bangladesh</option>
+                                    <option>Malaysia</option>
+                                    <option>Singapore</option>
+                                    <option>Canada</option>
+                                    <option>Netherlands</option>
+                                    <option>Spain</option>
+                                    <option>Italy</option>
+                                    <option>Norway</option>
+                                    <option>Switzerland</option>
+                                    <option>Israel</option>
+                                    <option>Denmark</option>
+                                    <option>Austria</option>
+                                    <option>New Zealand</option>
+                                    <option>Russia</option>
+                                    <option>Sweden</option>
+                                    <option>Poland</option>
+                                    <option>Brazil</option>
+                                    <option>Philippines</option>
+                                    <option>Vietnam</option>
+                                </select>
+                                </div>
+
+                                <div class="col-half">
+                                <label for="contact-number">Contact number: <span style="color: red;">*</span></label>
+                                <input type="tel" id="contact-number" name="contact-number" placeholder="Enter Your Contact Number*" required pattern="[0-9+\s-]+">
+                                </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-half">
+                                <label for="adults">No. of Adults <span style="color: red;">*</span></label>
+                                <input type="number" id="adults" name="adults" placeholder="Enter Number of Adults*" min="1" required>
+                                </div>
+
+                                <div class="col-half">
+                                <label for="children">No. of Children</label>
+                                <input type="number" id="children" name="children" placeholder="Enter Number of Children" min="0">
+                                </div>
+                            </div>
+
+                            <label for="subject">Enquiry Subject: <span style="color: red;">*</span></label>
+                            <input type="text" id="subject" name="subject" placeholder="Enquiry Subject *" required>
+
+                            <label for="message">Your Message <span style="color: red;">*</span></label>
+                            <textarea id="message" name="message" rows="5" placeholder="Enter Your Message *" required></textarea>
+
+                            <input type="submit" value="Send Email">
+                            </form>
+
+                            <!-- Success Modal -->
+                            <div id="successModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); 
+                            justify-content:center; align-items:center; z-index:9999;">
+                            <div style="background:#fff; padding:30px; border-radius:10px; text-align:center; max-width:400px;">
+                                <h2 style="color:green;">Form submitted successfully!</h2>
+                                <p>Thank you! The form has been submitted successfully.<br>We will reply to you soon!</p>
+                                <button id="closeModal" style="margin-top:15px; padding:8px 16px; border:none; background:green; color:white; border-radius:5px; cursor:pointer;">OK</button>
+                            </div>
+                            </div>
 
                         </div>
                     </div>
+                    <script>
+                        document.getElementById("enquiryForm").addEventListener("submit", async function(e) {
+                        e.preventDefault();
+                        const form = e.target;
+                        const data = new FormData(form);
+                        const modal = document.getElementById("successModal");
+
+                        try {
+                            const response = await fetch(form.action, { method: form.method, body: data });
+                            if (response.ok) {
+                            form.reset();
+                            modal.style.display = "flex";
+                            } else {
+                            alert("Error sending message. Please try again.");
+                            }
+                        } catch (error) {
+                            alert("Network error. Please check your connection.");
+                        }
+                        });
+
+                        document.getElementById("closeModal").addEventListener("click", function() {
+                        document.getElementById("successModal").style.display = "none";
+                        });
+                    </script>
+                </div>
+
+                    <!-- trip price and details -->
                     <div class="trip-pricing">
                         <div class="check-ins" style="width:330px;">
                             <div class="price-head">
@@ -416,11 +544,18 @@ if (isset($_GET['tripid'])) {
                                         $<?php echo $trip['price']; ?></span><span style="color: black;">/Person</span>
                                 </div>
                             </div>
-                            <div class="highlite"
-                                style="margin:10px 0px 10px 0px; padding-bottom:2rem; padding-left:10px;">
-                                <i class="fas fa-check" id="check-icon"></i><span>Best Price Guaranteed</span><br>
-                                <i class="fas fa-check" id="check-icon"></i><span>No Booking Fees</span><br>
-                                <i class="fas fa-check" id="check-icon"></i><span>Professional Guides</span><br>
+                            <h2>Highlights</h2>
+                             <div class="highlite" style="margin:10px 0; padding-bottom:2rem; padding-left:10px;">
+                                <?php
+                                // Loop through all highlight_title columns
+                                for ($i = 1; $i <= 6; $i++) {
+                                    $key = "highlight_title{$i}";
+                                    if (!empty($trip[$key])) {
+                                        echo '<i class="fas fa-check" id="check-icon"></i> ';
+                                        echo '<span>' . htmlspecialchars($trip[$key]) . '</span><br>';
+                                    }
+                                }
+                                ?>
                             </div>
                             <div class="trip-fact-right" style="padding-left: 10px;">
                                 <h4>Next Departure:</h4>
@@ -431,12 +566,14 @@ if (isset($_GET['tripid'])) {
                                     <li>April 2025</li>
                                 </ul>
                             </div>
-                            <div class="action" style="display: flex; justify-content: space-between;">
-                                <a href="book-trip?tripid=<?php echo $trip['tripid']; ?>" class="pricing-btn"><i
-                                        class="fas fa-ticket-alt text-teal-500 mr-2"></i>
-                                    Book Now
-                                </a>
+                            <div class="action" style="width:100%;">
+                            <a href="book-trip?tripid=<?php echo $trip['tripid']; ?>" class="pricing-btn" style="display:block; width:100%; text-align:center; padding:0.5rem 1rem;">
+                                <i class="fas fa-ticket-alt" style="margin-right:.5rem;"></i> Book Now
+                            </a>
                             </div>
+
+
+
                             <div style="text-align: center;padding:20px 0px 10px 0px;">
                                 <p>Need help in booking ? <a href="#enquiry-form" style="text-decoration: none;">Enquiry
                                         Now</a></p>
@@ -528,9 +665,12 @@ if (isset($_GET['tripid'])) {
                 </div>
             </div>
         </div>
+
+
+        <!-- related trips -->
         <div class="features">
             <div class="container text-left py-5">
-                <h1>Explore Related trips</h1>
+                <h1>Explore Related Trips</h1>
             </div>
         </div>
 
@@ -538,101 +678,93 @@ if (isset($_GET['tripid'])) {
             <div class="container text-center py-5 card-container" id="card-container"
                 style="row-gap:20px; background-color:transparent;">
                 <?php
-                $triptypename = $trip['triptype'];
-                $sql = "SELECT * FROM trip_details_view WHERE triptype=$triptypename";
+                // current trip info
+                $activity = $trip['activity'];
+                $location = $trip['location'];
+                $currentTripId = $trip['tripid'];
 
+                // secure query: fetch trips with same activity OR same location, exclude current trip
+                $sql = "SELECT * FROM trip_details_view WHERE (activity = ? OR location = ?) AND tripid != ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ssi", $activity, $location, $currentTripId);
                 $stmt->execute();
-                $trip_result = $stmt->get_result(); ?>
-                <?php if ($trip_result->num_rows > 0) {
+                $trip_result = $stmt->get_result();
+
+                if ($trip_result->num_rows > 0) {
                     while ($trips = $trip_result->fetch_assoc()) { ?>
-                        <div class="card" style=" flex: 0 0 calc(33.33% - 20px);">
-                            <div class="position-relative">
-                                <div class="carousel">
-                                    <div class="carousel-container">
-                                        <a href="">
-                                            <img src="../uploads/tripimg/<?php echo $trips['main_image']; ?>"
-                                                class="slide active">
-                                        </a>
-                                    </div>
-                                </div>
-                                <span class="badge-featured">
+                        <div class="card" 
+                            style="flex: 0 0 calc(33.33% - 20px); 
+                                    box-sizing: border-box; 
+                                    height: 520px; 
+                                    display: flex; 
+                                    flex-direction: column; 
+                                    justify-content: space-between; 
+                                    border: 1px solid #ddd; 
+                                    border-radius: 10px; 
+                                    overflow: hidden; 
+                                    background-color: #fff;">
+                            <div class="position-relative" style="height: 220px; overflow: hidden;">
+                                <a href="view-trip?tripid=<?php echo $trips['tripid']; ?>">
+                                    <img src="<?php echo htmlspecialchars($trips['main_image']); ?>" 
+                                        alt="Trip Image"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                </a>
+                                <span class="badge-featured" 
+                                    style="position: absolute; top: 10px; left: 10px; background: #008080; color: #fff; padding: 5px 10px; border-radius: 5px;">
                                     Featured
                                 </span>
                             </div>
-                            <div class="card-top">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center"
-                                        style="padding:10px 0px 10px 0px">
-                                        <a href="" style="text-decoration:none; color:black;"
-                                            onmouseover="this.style.color='#008080'" onmouseout="this.style.color='black'">
-                                            <h5 class=" card-title mb-0">
-                                                <?php echo $trips['title']; ?>
-                                            </h5>
-                                        </a>
 
-                                    </div>
-                                    <div>
-                                        <div class=" d-flex mb-3">
-                                            <div class="me-3 card-contents" style="padding-left:15px;">
-                                                <p class="mb-1">
-                                                    <i class="fas fa-map-marker-alt" style="color:green; margin-right:10px;">
-                                                    </i>
-                                                    <?php echo $trips['location']; ?>
-                                                </p>
-                                                <p class="mb-1">
-                                                    <i class="fas fa-clock" style="color:green; margin-right:5px;">
-                                                    </i>
-                                                    <?php echo $trips['duration']; ?>
-                                                </p>
-                                                <p class="mb-1">
-                                                    <i class="fas fa-users" style="color:green; margin-right:2px;">
-                                                    </i>
-                                                    <?php echo $trips['groupsize']; ?>
-                                                </p>
-                                            </div>
-                                            <div class="me-3 card-contents">
-                                                <div class="price"
-                                                    style="margin-top:50%; border-left: 1px solid gray; padding-left:20px;">
-                                                    <h2><?php echo "$" . number_format($trips["price"]); ?></h2>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="me-3 card-contents" style="padding:10px 0px 10px 0px;">
-                                        <p class="mb-1">
-                                            <?php
-                                            $description = $trips['description'];
-                                            $words = explode(" ", $description);
-                                            $firstTenWords = implode(" ", array_slice($words, 0, 10));
-                                            echo $firstTenWords . '...'; // Adds "..." to indicate there's more
-                                            ?>
-                                        </p>
-                                    </div>
-                                    <div class="departure-detail"
-                                        style="display: flex; align-items:end; justify-content: space-between;">
-                                        <div class="me-3 card-contents" style="padding:10px 0px 10px 0px;">
-                                            <h5>Next Departure: </h5>
-                                            <p class="mb-1">Jan 2025</p>
-                                            <p class="mb-1">Jan 2025</p>
-                                            <p class="mb-1">Jan 2025</p>
-                                        </div>
-                                        <div class="me-3 card-contents" id="view-details-link"
-                                            style="padding:10px 0px 10px 0px;">
-                                            <a href="view-trip?tripid=<?php echo $trips['tripid']; ?>">VIEW DETAILS</a>
-                                        </div>
-                                    </div>
+                            <div class="card-body" style="padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <h5 style="margin: 0 0 10px 0;"><?php echo htmlspecialchars($trips['title']); ?></h5>
+                                    <p style="margin: 0 0 5px 0;">
+                                        <i class="fas fa-map-marker-alt" style="color: green; margin-right: 8px;"></i>
+                                        <?php echo htmlspecialchars($trips['location']); ?>
+                                    </p>
+                                    <p style="margin: 0 0 5px 0;">
+                                        <i class="fas fa-clock" style="color: green; margin-right: 8px;"></i>
+                                        <?php echo htmlspecialchars($trips['duration']); ?>
+                                    </p>
+                                    <p style="margin: 0 0 10px 0;">
+                                        <i class="fas fa-users" style="color: green; margin-right: 8px;"></i>
+                                        <?php echo htmlspecialchars($trips['groupsize']); ?>
+                                    </p>
+                                </div>
+
+                                <div style="border-top: 1px solid #ddd; padding-top: 10px;">
+                                    <h3 style="margin: 0; color: #008080;">$<?php echo number_format($trips["price"]); ?></h3>
+                                </div>
+
+                                <div style="margin-top: 10px;">
+                                    <p style="margin: 0 0 10px 0;">
+                                        <?php
+                                        $description = htmlspecialchars($trips['description']);
+                                        $words = explode(" ", $description);
+                                        $firstTenWords = implode(" ", array_slice($words, 0, 10));
+                                        echo $firstTenWords . '...';
+                                        ?>
+                                    </p>
+                                    <a href="view-trip?tripid=<?php echo $trips['tripid']; ?>" 
+                                    style="text-decoration: none; color: #008080; font-weight: bold;">
+                                    VIEW DETAILS
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    <?php }
-                } ?>
-            </div>
-        </div>
-        <div class="features">
-            <div class="container py-5">
-                <div class="related-trips">
 
+                    <?php }
+                    } else {
+                        echo "<p>No related trips found.</p>";
+                    }
+                    ?>
                 </div>
+            </div>
+            <div class="features">
+                <div class="container py-5">
+                    <div class="related-trips">
+
+                    </div>
             </div>
         </div>
     </div>
@@ -643,6 +775,7 @@ if (isset($_GET['tripid'])) {
     <div class="scroll-up" id="scrollUpButton" onclick="scrollToTop()">
         <i class="fas fa-chevron-up"></i>
     </div>
+    
     <script>
         window.onscroll = function () {
             var scrollUpButton = document.getElementById("scrollUpButton");
@@ -691,47 +824,33 @@ if (isset($_GET['tripid'])) {
         // Example: Set the first menu item (Overview) as active by default
         setActiveMenuItem();
     </script>
+    
     <!-- for itinerary -->
     <script>
-        function toggleDay(element) {
-            let day = element.parentElement;
-            let content = day.querySelector('.day-content');
-            let icon = element.querySelector('.icon');
+        function toggleDay(header) {
+        const day = header.parentElement;
+        const content = day.querySelector('.day-content');
 
-            if (day.classList.contains("expanded")) {
-                content.style.maxHeight = "0";
-                content.style.padding = "0 15px";
-                day.classList.remove("expanded");
-            } else {
-                content.style.maxHeight = content.scrollHeight + 20 + "px"; // Dynamically set max-height
-                content.style.padding = "10px 15px";
-                day.classList.add("expanded");
-            }
-        }
-        function toggleAll() {
-            let toggleSwitch = document.querySelector('.toggle-switch');
-            let days = document.querySelectorAll('.day');
-            let expand = !toggleSwitch.classList.contains("active");
-
-            days.forEach(day => {
-                let content = day.querySelector('.day-content');
-
-                if (expand) {
-                    content.style.maxHeight = content.scrollHeight + 20 + "px"; // Ensure full visibility
-                    content.style.padding = "10px 15px";
-                    day.classList.add("expanded");
-                } else {
-                    content.style.maxHeight = "0";
-                    content.style.padding = "0 15px";
-                    day.classList.remove("expanded");
-                }
+        if (day.classList.contains('expanded')) {
+            // collapse
+            content.style.maxHeight = null;
+            day.classList.remove('expanded');
+        } else {
+            // collapse any other open section (optional)
+            document.querySelectorAll('.day.expanded').forEach(d => {
+            d.classList.remove('expanded');
+            d.querySelector('.day-content').style.maxHeight = null;
             });
 
-            toggleSwitch.classList.toggle("active", expand);
-            document.querySelector(".toggle-label").textContent = expand ? "Collapse All" : "Expand All";
+            // expand this one
+            content.style.maxHeight = content.scrollHeight + 'px';
+            day.classList.add('expanded');
         }
-
+        }  
     </script>
+
+
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

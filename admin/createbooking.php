@@ -106,12 +106,12 @@ if ($trip_query && $trip_query->num_rows > 0) {
         <form method="post" onsubmit="return validateBookingForm(event)">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h2 class="text-lg font-semibold mb-4 text-gray-800">Trip Information</h2>
+              <!-- Trip Selection -->
               <label class="form-label">Select Trip *</label>
-              <select name="tripid" id="tripid" class="form-input" required onchange="updateTripName()">
+              <select name="trip_id" id="trip_id" class="form-input" required onchange="updateTripName()">
                 <option value="">-- Select a Trip --</option>
                 <?php foreach ($trips as $trip): ?>
-                  <option value="<?= $trip['triptype'] ?>" data-name="<?= htmlspecialchars($trip['triptype']) ?>">
+                  <option value="<?= $trip['tripid'] ?>" data-name="<?= htmlspecialchars($trip['triptype']) ?>">
                     <?= htmlspecialchars($trip['triptype']) ?>
                   </option>
                 <?php endforeach; ?>
@@ -242,6 +242,7 @@ if ($trip_query && $trip_query->num_rows > 0) {
       const selected = select.options[select.selectedIndex];
       if (selected && selected.dataset.name) hidden.value = selected.dataset.name;
     }
+
 
     function validateBookingForm(e) {
       const required = ['trip_id', 'full_name', 'email', 'phone_number', 'arrival_date', 'departure_date'];

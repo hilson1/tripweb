@@ -1,7 +1,7 @@
 <?php
 include("frontend/session_start.php");
 require 'connection.php';
-require 'send_email.php';
+require 'send_otp.php';
 
 $SuccessMsg = "";
 $FailMsg = "";

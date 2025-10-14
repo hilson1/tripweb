@@ -12,7 +12,7 @@ $result = $stmt->get_result();
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Dashboard - ThankYouNepalTrip</title>
+  <title>View Users - ThankYouNepalTrip</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -271,14 +271,14 @@ $result = $stmt->get_result();
                   <td class="py-4 px-6">
                     <div class="flex justify-start space-x-2">
                      <!-- Edit Button -->
-                      <button onclick="window.editUser(<?php echo $user['userid']; ?>)" 
+                      <button onclick="window.edit_User(<?php echo $user['userid']; ?>)" 
                         class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
                         <i class="fas fa-edit text-xs"></i>
                         <span>Edit</span>
                       </button>
 
                       <!-- Delete Button -->
-                      <button onclick="window.deleteUser(<?php echo $user['userid']; ?>)" 
+                      <button onclick="window.delete_User(<?php echo $user['userid']; ?>)" 
                         class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
                         <i class="fas fa-trash text-xs"></i>
                         <span>Delete</span>

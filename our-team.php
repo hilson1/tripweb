@@ -72,7 +72,7 @@ include("frontend/session_start.php");
 include("frontend/header.php");
 ?>
 <header class="hero">
-    <h1>Our Teams</h1>
+    <h1>OUR TEAMS</h1>
 </header>
 
 <section class="our-team">
