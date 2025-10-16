@@ -226,7 +226,7 @@ $conn->close();
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
               <button type="button" 
-                      onclick="window.location.href='alltrip.php'" 
+                      onclick="window.location.href='alltrip'" 
                       class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200">
                 <i class="fas fa-times mr-2"></i>Cancel
               </button>

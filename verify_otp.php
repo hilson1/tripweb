@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['email']) && !isset($_
 // Step 2: Handle OTP verification
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['otp'])) {
     if (!isset($_SESSION['signup_data'])) {
-        header('location: signup.php');
+        header('location: signup');
         exit();
     }
 
@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['otp'])) {
 
         if ($stmt->execute()) {
             unset($_SESSION['signup_data']);
-            header('location: login.php?msg=success');
+            header('location: login?msg=success');
             exit();
         } else {
             $FailMsg = "Account creation failed.";

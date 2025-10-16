@@ -3,7 +3,7 @@ require 'connection.php';
 
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header('location:login.php');
+    header('location:login');
     exit;
 }
 
@@ -16,7 +16,7 @@ if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
 } else {
     // Handle case where user doesn't exist
-    header('location:login.php');
+    header('location:login');
     exit;
 }
 
@@ -70,6 +70,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
     <link rel="stylesheet" href="index.css">
 
     </script>
@@ -307,10 +309,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="top-container">
                 <div class="profile-top" style="display: flex; gap: 20px; align-items: center;">
                     <div class="image">
-                        <img id="profilePic" alt="User profile picture" height="80"
-                            src="https://storage.googleapis.com/a1aa/image/lYqBODwnaMU-b05_oodpY-_9bnJPEcMy7zRIn0c6F8k.jpg"
-                            width="80" style="border-radius: 20%; cursor: pointer;" />
-                        <p style="text-align: center; padding-top: 5px;" id="profilePic">Edit</p>
+                        <i class="fa-solid fa-user" style="font-size:80px;color:#888;border-radius:20%;cursor:pointer;"></i>
                     </div>
                     <h1 class="">
                         Welcome <?php echo $user['user_name']; ?>

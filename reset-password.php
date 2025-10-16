@@ -1,79 +1,72 @@
 <?php
-if (!isset($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']) === false) {
-    header("Location: index");
-    exit;
-}
-
-session_start();
 require 'connection.php';
+session_start();
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-require 'vendor/autoload.php';
-
-$successMsg = '';
+$token = $_GET['token'] ?? '';
 $errorMsg = '';
+$successMsg = '';
+$valid = false;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = trim($_POST['email'] ?? '');
+// --- Verify token ---
+if (!empty($token)) {
+    $sql = "SELECT email, reset_expires FROM users WHERE reset_token = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if (empty($email)) {
-        $errorMsg = "Email is required.";
-    } else {
-        $sql = "SELECT userid FROM users WHERE email = ?";
-        $stmt = $conn->prepare($sql);
-        if ($stmt) {
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows == 1) {
-                // generate token and expiry
-                $token = bin2hex(random_bytes(32));
-                $expires = date("Y-m-d H:i:s", strtotime("+1 hour"));
-
-                // update database
-                $update = $conn->prepare("UPDATE users SET reset_token=?, reset_expires=? WHERE email=?");
-                $update->bind_param("sss", $token, $expires, $email);
-                $update->execute();
-                $update->close();
-
-                // build reset link (must match actual file path)
-                $resetLink = "https://" . $_SERVER['HTTP_HOST'] . "/reset-password?token=$token";
-
-                // send email via PHPMailer
-                $mail = new PHPMailer(true);
-                try {
-                    $mail->isSMTP();
-                    $mail->Host = 'mail.thankyounepaltrip.com';
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'info@thankyounepaltrip.com';
-                    $mail->Password = 'T@1234@!@#FGahNep';
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->Port = 465;
-
-                    $mail->setFrom('info@thankyounepaltrip.com', 'TripWeb');
-                    $mail->addAddress($email);
-                    $mail->Subject = 'Password Reset Request';
-                    $mail->Body = "Click here to reset your password: $resetLink";
-                    $mail->send();
-
-                    $successMsg = "A password reset link has been sent to your email.";
-                } catch (Exception $e) {
-                    $errorMsg = "Email could not be sent. Error: {$mail->ErrorInfo}";
-                }
-            } else {
-                $errorMsg = "No account found with that email.";
-            }
-
-            $stmt->close();
+    if ($row = $result->fetch_assoc()) {
+        if (strtotime($row['reset_expires']) > time()) {
+            $valid = true;
+            $email = $row['email'];
         } else {
-            $errorMsg = "Database error. Try again later.";
+            $errorMsg = "This reset link has expired. Please request a new one.";
         }
+    } else {
+        $errorMsg = "Invalid reset link.";
     }
-    $conn->close();
+    $stmt->close();
+} else {
+    $errorMsg = "Missing token.";
 }
+
+// --- Handle form submission ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['token'])) {
+    $token = $_POST['token'];
+    $password = trim($_POST['password'] ?? '');
+    $confirm = trim($_POST['confirm'] ?? '');
+
+    if ($password === '' || $confirm === '') {
+        $errorMsg = "Both password fields are required.";
+    } elseif ($password !== $confirm) {
+        $errorMsg = "Passwords do not match.";
+    } elseif (strlen($password) < 8) {
+        $errorMsg = "Password must be at least 8 characters long.";
+    } else {
+        $stmt = $conn->prepare("SELECT email FROM users WHERE reset_token = ? AND reset_expires > NOW()");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            $email = $row['email'];
+
+            $update = $conn->prepare("UPDATE users SET password=?, reset_token=NULL, reset_expires=NULL WHERE email=?");
+            $update->bind_param("ss", $hashed, $email);
+            $update->execute();
+            $update->close();
+
+            $successMsg = "Password reset successful. You can now <a href='login'>log in</a>.";
+            $valid = false; // hide form after success
+        } else {
+            $errorMsg = "Invalid or expired reset token.";
+        }
+        $stmt->close();
+    }
+}
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -82,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password</title>
+    <title>Reset Password | TripWeb</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
@@ -111,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 500;
         }
 
-        .login-container input[type="email"] {
+        .login-container input[type="password"] {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
@@ -166,22 +159,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php include("frontend/header.php"); ?>
 
     <div class="login-container">
-        <h2>Forgot Password</h2>
+        <h2>Reset Password</h2>
 
         <?php if ($errorMsg): ?>
             <div class="error-message"><?php echo htmlspecialchars($errorMsg); ?></div>
         <?php endif; ?>
 
         <?php if ($successMsg): ?>
-            <div class="success-message"><?php echo htmlspecialchars($successMsg); ?></div>
+            <div class="success-message"><?php echo $successMsg; ?></div>
         <?php endif; ?>
 
-        <form id="forgotForm" method="post">
-            <label for="email">Enter your registered email <span style="color:red;">*</span></label>
-            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        <?php if ($valid): ?>
+            <form id="resetForm" method="post">
+                <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
-            <button type="submit" class="login-button">Send Reset Link</button>
-        </form>
+                <label for="password">New Password <span style="color:red;">*</span></label>
+                <input type="password" id="password" name="password" placeholder="Enter new password" required>
+
+                <label for="confirm">Confirm Password <span style="color:red;">*</span></label>
+                <input type="password" id="confirm" name="confirm" placeholder="Re-enter new password" required>
+
+                <button type="submit" class="login-button">Reset Password</button>
+            </form>
+        <?php endif; ?>
 
         <div class="back-login">
             <a href="login">Back to Login</a>
@@ -192,20 +192,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php include("frontend/scrollup.html"); ?>
 
     <script>
-        document.getElementById('forgotForm').addEventListener('submit', function (event) {
-            const email = document.getElementById('email').value.trim();
-            let valid = true;
+        document.getElementById('resetForm')?.addEventListener('submit', function (event) {
+            const pass = document.getElementById('password').value.trim();
+            const confirm = document.getElementById('confirm').value.trim();
             document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
 
-            if (!email) {
-                showError('email', 'Email is required.');
-                valid = false;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('email', 'Enter a valid email.');
-                valid = false;
+            if (pass.length < 8) {
+                showError('password', 'Password must be at least 8 characters long.');
+                event.preventDefault();
+            } else if (pass !== confirm) {
+                showError('confirm', 'Passwords do not match.');
+                event.preventDefault();
             }
-
-            if (!valid) event.preventDefault();
         });
 
         function showError(id, msg) {
@@ -226,5 +224,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

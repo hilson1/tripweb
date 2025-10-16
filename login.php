@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
 
                     // Redirect to profile page
-                    header("Location: my-account.php");
+                    header("Location: my-account");
                     exit();
                 } else {
                     $FailMsg = "Invalid password.";
@@ -191,14 +191,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div class="forgot-password">
-                <a href="forgot-password.php">Forgot Password?</a>
+                <a href="forgot-password">Forgot Password?</a>
             </div>
 
             <button type="submit" class="login-button">Login</button>
         </form>
 
         <div class="signup">
-            Don't have an account? <a href="signup.php">Sign up</a>
+            Don't have an account? <a href="signup">Sign up</a>
         </div>
     </div>
 

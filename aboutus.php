@@ -128,7 +128,7 @@
     <section class="text-center py-5" style="background-color: #008080; color: white;">
         <h3>Ready to start your journey?</h3>
         <p>Contact us today to plan your dream vacation!</p>
-        <a href="contactus.php" class="btn btn-light btn-lg">Get in Touch</a>
+        <a href="contactus" class="btn btn-light btn-lg">Get in Touch</a>
     </section>
 
     <?php

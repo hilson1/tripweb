@@ -141,7 +141,7 @@ include("connection.php");
                 <h1><?php echo $tripName; ?></h1>
                 <img src="<?php echo $image; ?>" class="img-fluid rounded mb-4" alt="<?php echo $tripName; ?>">
                 <p><?php echo $description; ?></p>
-                <a href="trip-types.php" class="btn btn-outline-primary mt-3">← Back to all trip types</a>
+                <a href="trip-types" class="btn btn-outline-primary mt-3">← Back to all trip types</a>
             </div>
     <?php
         } else {
@@ -166,7 +166,7 @@ include("connection.php");
                             ?>
                             <div class="col-md-4">
                                 <div class="trip-card">
-                                    <a href="trip-types.php?triptype-is=<?php echo htmlspecialchars(urlencode($trip['triptype'])); ?>" style="text-decoration:none; color:inherit;">
+                                    <a href="trip-types?triptype-is=<?php echo htmlspecialchars(urlencode($trip['triptype'])); ?>" style="text-decoration:none; color:inherit;">
                                         <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" alt="<?php echo htmlspecialchars($trip['triptype']); ?>">
                                         <div class="trip-card-body">
                                             <h3 class="trip-card-title"><?php echo htmlspecialchars($trip['triptype']); ?></h3>
@@ -179,7 +179,7 @@ include("connection.php");
                                                 ?>
                                             </p>
                                         </div>
-                                         <a href="destinations.php?destination-is=<?php echo urlencode($name); ?>" 
+                                         <a href="destinations?destination-is=<?php echo urlencode($name); ?>" 
                                             class="fw-semibold text-decoration-none" style="color: #3aafa9;">
                                             Learn more
                                             </a>

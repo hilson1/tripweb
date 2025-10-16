@@ -69,7 +69,7 @@ include("frontend/header.php");
     <div class="container">
         <h6 class="text-center mb-5">
             Find answers to your questions before joining a tour so that you can find out exactly what you want to know.
-            If you have more questions, please feel free to <a href="contactus.php" class="contact-link">reach us via
+            If you have more questions, please feel free to <a href="contactus" class="contact-link">reach us via
                 the contact form</a>.
         </h6>
         <div class="accordion" id="faqAccordion">

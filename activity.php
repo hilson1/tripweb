@@ -172,7 +172,7 @@
           <h1><?php echo $activityName; ?></h1>
           <img src="<?php echo $image; ?>" class="img-fluid rounded mb-4" alt="<?php echo $activityName; ?>">
           <p><?php echo $description; ?></p>
-          <a href="activities.php" class="btn btn-outline-primary mt-3">← Back to all activities</a>
+          <a href="activities" class="btn btn-outline-primary mt-3">← Back to all activities</a>
       </div>
   <?php
       } else {
@@ -195,7 +195,7 @@
               ?>
                       <div class="col-12 col-sm-6 col-md-4">
                           <div class="trip-card h-100">
-                              <a href="activities.php?activity-is=<?php echo htmlspecialchars(urlencode($activity['activity'])); ?>" style="text-decoration:none; color:inherit;">
+                              <a href="activities?activity-is=<?php echo htmlspecialchars(urlencode($activity['activity'])); ?>" style="text-decoration:none; color:inherit;">
                                   <img src="<?php echo htmlspecialchars($activity['main_image']); ?>" alt="<?php echo htmlspecialchars($activity['activity']); ?>">
                                   <div class="trip-card-body">
                                       <h3 class="trip-card-title"><?php echo htmlspecialchars($activity['activity']); ?></h3>

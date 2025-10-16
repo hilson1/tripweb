@@ -22,8 +22,8 @@ if ($activity) {
     
     if ($delete_stmt->execute()) {
         // Delete associated image if it exists
-        if ($activity['main_image'] && file_exists("../uploads/activity/" . $activity['main_image'])) {
-            unlink("../uploads/activity/" . $activity['main_image']);
+        if ($activity['main_image'] && file_exists("../assets/activity/" . $activity['main_image'])) {
+            unlink("../assets/activity/" . $activity['main_image']);
         }
         
         echo "<script>alert('Activity deleted successfully'); window.location.href = 'allactivities.php';</script>";

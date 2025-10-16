@@ -52,7 +52,7 @@ $result_destinations = $conn->query($sql_destinations);
                 <p>Grab your stuff and let’s get lost.</p>
             </div>
             <div class="search-box">
-                <form action="search_results.php" method="GET">
+                <form action="search_results" method="GET">
                     <div class="mb-3 input-group">
                         <span class="input-group-text"><i class="fas fa-walking" id="search-icon"></i></span>
                         <select class="form-select" aria-label="Activity" name="activity">
@@ -182,7 +182,7 @@ $result_destinations = $conn->query($sql_destinations);
                         <div class="d-flex flex-column align-items-start">
                             <span class="fw-bold text-dark mb-2" style="font-size: 1.3rem;"><?php echo $price; ?></span>
                             <a class="btn btn-warning w-100" 
-                                href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
+                                href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
                                 View Details
                             </a>
                         </div>
@@ -235,7 +235,7 @@ $result_destinations = $conn->query($sql_destinations);
                 <div class="col-md-4 d-flex align-items-stretch">
                     <div class="card border-0 shadow h-100 rounded-3 overflow-hidden transition-all" 
                         style="transition: transform 0.3s ease;">
-                    <a href="destinations.php?destination-is=<?php echo urlencode($name); ?>" 
+                    <a href="destinations?destination-is=<?php echo urlencode($name); ?>" 
                         class="text-decoration-none text-dark">
                         <img src="<?php echo $image; ?>" alt="<?php echo $name; ?>"
                             class="card-img-top w-100" 
@@ -244,7 +244,7 @@ $result_destinations = $conn->query($sql_destinations);
                     <div class="card-body text-start d-flex flex-column p-4">
                         <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;"><?php echo $name; ?></h5>
                         <p class="text-muted flex-grow-1 mb-3" style="min-height: 70px;"><?php echo $shortDesc; ?></p>
-                        <a href="destinations.php?destination-is=<?php echo urlencode($name); ?>" 
+                        <a href="destinations?destination-is=<?php echo urlencode($name); ?>" 
                         class="fw-semibold text-decoration-none" style="color: #3aafa9;">
                         Learn more
                         </a>
@@ -305,7 +305,7 @@ $result_destinations = $conn->query($sql_destinations);
                 <div class="card border-0 shadow h-100 rounded-3 overflow-hidden transition-all"
                     style="transition: transform 0.3s ease;">
                     <div class="position-relative">
-                    <a href="activities.php?activity-is=<?php echo htmlspecialchars(urlencode($activity['activity'])); ?>" class="stretched-link">
+                    <a href="activities?activity-is=<?php echo htmlspecialchars(urlencode($activity['activity'])); ?>" class="stretched-link">
                         <img src="<?php echo $image; ?>" 
                             alt="<?php echo $name; ?>" 
                             class="card-img-top w-100"
@@ -315,7 +315,7 @@ $result_destinations = $conn->query($sql_destinations);
                     <div class="card-body text-start d-flex flex-column p-4">
                     <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;"><?php echo $name; ?></h5>
                     <p class="text-muted flex-grow-1 mb-3" style="min-height: 70px;"><?php echo $shortDesc; ?></p>
-                    <a href="activities.php?activity-is=<?php echo htmlspecialchars(urlencode($activity['activity'])); ?>" 
+                    <a href="activities?activity-is=<?php echo htmlspecialchars(urlencode($activity['activity'])); ?>" 
                         class="fw-semibold text-decoration-none" style="color: #3aafa9;">
                         Learn More
                     </a>
@@ -377,7 +377,7 @@ $result_destinations = $conn->query($sql_destinations);
                     <div class="card border-0 shadow h-100 rounded-3 overflow-hidden transition-all"
                         style="transition: transform 0.3s ease;">
                     <div class="position-relative">
-                        <a href="trip-types.php?triptype-is=<?php echo htmlspecialchars(urlencode($triptype['triptype'])); ?>" class="stretched-link">
+                        <a href="trip-types?triptype-is=<?php echo htmlspecialchars(urlencode($triptype['triptype'])); ?>" class="stretched-link">
                         <img src="<?php echo $image; ?>" 
                             alt="<?php echo $name; ?>" 
                             class="card-img-top w-100"
@@ -387,7 +387,7 @@ $result_destinations = $conn->query($sql_destinations);
                     <div class="card-body text-start d-flex flex-column p-4">
                         <h5 class="fw-bold text-dark mb-2" style="font-size: 1.5rem;"><?php echo $name; ?></h5>
                         <p class="text-muted flex-grow-1 mb-3" style="min-height: 70px;"><?php echo $shortDesc; ?></p>
-                        <a href="trip-types.php?triptype-is=<?php echo htmlspecialchars(urlencode($triptype['triptype'])); ?>" 
+                        <a href="trip-types?triptype-is=<?php echo htmlspecialchars(urlencode($triptype['triptype'])); ?>" 
                         class="fw-semibold text-decoration-none" style="color: #3aafa9;">
                         Learn More
                         </a>

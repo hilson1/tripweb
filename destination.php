@@ -164,7 +164,7 @@ if (isset($_GET['destination-is'])) {
             <h1><?php echo $destinationName; ?></h1>
             <img src="<?php echo $image; ?>" class="img-fluid rounded mb-4" alt="<?php echo $destinationName; ?>">
             <p><?php echo $description; ?></p>
-            <a href="destinations.php" class="btn btn-outline-primary mt-3">← Back to all destinations</a>
+            <a href="destinations" class="btn btn-outline-primary mt-3">← Back to all destinations</a>
         </div>
         <?php
     } else {
@@ -194,7 +194,7 @@ if (isset($_GET['destination-is'])) {
       ?>
         <div class="col-12 col-sm-6 col-md-4">
           <div class="destination-card h-100">
-            <a href="destinations.php?destination-is=<?php echo htmlspecialchars(urlencode($name)); ?>" style="text-decoration:none; color:inherit;">
+            <a href="destinations?destination-is=<?php echo htmlspecialchars(urlencode($name)); ?>" style="text-decoration:none; color:inherit;">
               <img src="<?php echo $image; ?>" alt="<?php echo $name; ?>">
               <div class="destination-card-body">
                 <h3 class="destination-card-title"><?php echo $name; ?></h3>
