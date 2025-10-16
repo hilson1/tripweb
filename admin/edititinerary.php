@@ -1,9 +1,10 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header("Location: allitinerary.php");
+    header("Location: allitinerary");
     exit();
 }
 
@@ -16,7 +17,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
     $_SESSION['message'] = "Error: Itinerary not found.";
-    header("Location: allitinerary.php");
+    header("Location: allitinerary");
     exit();
 }
 
@@ -53,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($update->execute()) {
         $_SESSION['message'] = "Success: Itinerary updated successfully!";
-        header("Location: allitinerary.php");
+        header("Location: allitinerary");
         exit();
     } else {
         $_SESSION['message'] = "Error: Update failed.";
@@ -88,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               <h1 class="text-3xl font-bold"><i class="fas fa-edit mr-3"></i>Edit Trip Itinerary</h1>
               <p class="text-green-100">Modify daily activities and descriptions</p>
             </div>
-            <a href="allitinerary.php" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+            <a href="allitinerary" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
               <i class="fas fa-arrow-left mr-2"></i>Back
             </a>
           </div>
@@ -142,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           </div>
 
           <div class="flex justify-end space-x-4">
-            <a href="allitinerary.php" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+            <a href="allitinerary." class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
               Cancel
             </a>
             <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition-colors">

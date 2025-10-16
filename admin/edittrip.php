@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require 'frontend/connection.php';
 
 // Fetch dropdown data
@@ -75,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     );
 
     if ($stmt->execute()) {
-        echo "<script>alert('Trip updated successfully!');window.location.href='alltrip.php';</script>";
+        echo "<script>alert('Trip updated successfully!');window.location.href='alltrip';</script>";
     } else {
         echo "<script>alert('Error: " . $stmt->error . "');</script>";
     }
@@ -229,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="flex justify-end space-x-4 pt-6">
-          <a href="alltrip.php" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancel</a>
+          <a href="alltrip" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Cancel</a>
           <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Update Trip</button>
         </div>
       </form>

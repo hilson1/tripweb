@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
@@ -119,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
           <div class="flex justify-end space-x-4">
-            <a href="allitinerary.php" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+            <a href="allitinerary" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
               Cancel
             </a>
             <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition-colors">

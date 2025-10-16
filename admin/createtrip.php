@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require 'frontend/connection.php'; // Reuse your DB connection file
 
 // Fetch trip types
@@ -278,7 +279,7 @@ $conn->close();
                     </div>
 
                     <div class="mt-6 flex justify-end space-x-4">
-                        <button type="button" class="btn-secondary" onclick="window.location.href='alltrip.php'">Cancel</button>
+                        <button type="button" class="btn-secondary" onclick="window.location.href='alltrip'">Cancel</button>
                         <button type="submit" class="btn-primary">Create Trip</button>
                     </div>
                 </form>

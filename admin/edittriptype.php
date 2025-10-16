@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 session_start();
 
@@ -62,12 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $_SESSION['message'] = "Success: Triptype updated successfully!";
-        header("Location: alltriptype.php");
+        header("Location: alltriptype");
         exit();
 
     } catch (Exception $e) {
         $_SESSION['message'] = $e->getMessage();
-        header("Location: edittriptype.php?name=" . urlencode($triptype_name));
+        header("Location: edittriptype?name=" . urlencode($triptype_name));
         exit();
     }
 } else {
@@ -81,12 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$triptype) {
             $_SESSION['message'] = "Error: Triptype not found";
-            header("Location: alltriptype.php");
+            header("Location: alltriptype");
             exit();
         }
     } else {
         $_SESSION['message'] = "Error: Triptype name not specified";
-        header("Location: alltriptype.php");
+        header("Location: alltriptype");
         exit();
     }
 }
@@ -126,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </h1>
                 <p class="text-blue-100">Update trip type information</p>
               </div>
-              <a href="alltriptype.php"
+              <a href="alltriptype"
                  class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all duration-300">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Back to List
@@ -151,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <div class="glass-effect rounded-2xl shadow-xl p-6">
-          <form action="edittriptype.php" method="POST" enctype="multipart/form-data" class="space-y-6">
+          <form action="edittriptype" method="POST" enctype="multipart/form-data" class="space-y-6">
             <input type="hidden" name="original_name" value="<?= htmlspecialchars($triptype['triptype']) ?>">
             <input type="hidden" name="current_image" value="<?= htmlspecialchars($triptype['main_image']) ?>">
 
@@ -201,7 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
 
               <div class="col-span-2 flex justify-end gap-4 pt-6">
-                <a href="alltriptype.php"
+                <a href="alltriptype"
                    class="px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">
                   <i class="fas fa-times mr-2"></i>Cancel
                 </a>

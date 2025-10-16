@@ -1,5 +1,9 @@
 <?php
+// Always start session before output
+$session_path = '/'; // ensures session cookie is valid across all paths
+session_set_cookie_params(['path' => $session_path]);
 session_start();
+
 require 'connection.php'; // adjust path as needed
 
 $FailMsg = '';
@@ -23,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } elseif (password_verify($password, $user['password'])) {
                     $_SESSION['admin_id'] = $user['id'];
                     $_SESSION['admin_email'] = $user['email'];
-                    header("Location: ../index.php");
+                    header("Location: ../../admin/index");
                     exit;
                 } else {
                     $FailMsg = "Invalid password.";
@@ -97,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </form>
 
     <div class="text-center mt-3">
-        <a href="../forgot-password.php" style="color:#00bfa5;">Forgot Password?</a>
+        <a href="./forgotpass" style="color:#00bfa5;">Forgot Password?</a>
     </div>
 </div>
 </body>

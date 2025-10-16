@@ -1,10 +1,11 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 
 $destination_name = $_GET['name'] ?? null;
 
 if (!$destination_name) {
-    header("Location: alldestination.php");
+    header("Location: alldestination");
     exit();
 }
 
@@ -26,12 +27,12 @@ if ($destination) {
     $stmt->bind_param("s", $destination_name);
     
     if ($stmt->execute()) {
-        header("Location: alldestination.php?success=1&message=Destination+deleted+successfully");
+        header("Location: alldestination?success=1&message=Destination+deleted+successfully");
     } else {
-        header("Location: alldestination.php?error=1&message=Error+deleting+destination");
+        header("Location: alldestination?error=1&message=Error+deleting+destination");
     }
 } else {
-    header("Location: alldestination.php?error=1&message=Destination+not+found");
+    header("Location: alldestination?error=1&message=Destination+not+found");
 }
 
 $stmt->close();

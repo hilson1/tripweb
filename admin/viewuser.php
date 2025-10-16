@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 
 // Get fresh data for display
@@ -271,14 +272,14 @@ $result = $stmt->get_result();
                   <td class="py-4 px-6">
                     <div class="flex justify-start space-x-2">
                      <!-- Edit Button -->
-                      <button onclick="window.edit_User(<?php echo $user['userid']; ?>)" 
+                      <button onclick="window.edit_user(<?php echo $user['userid']; ?>)" 
                         class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
                         <i class="fas fa-edit text-xs"></i>
                         <span>Edit</span>
                       </button>
 
                       <!-- Delete Button -->
-                      <button onclick="window.delete_User(<?php echo $user['userid']; ?>)" 
+                      <button onclick="window.delete_user(<?php echo $user['userid']; ?>)" 
                         class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
                         <i class="fas fa-trash text-xs"></i>
                         <span>Delete</span>

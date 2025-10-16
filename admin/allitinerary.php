@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
@@ -33,7 +34,7 @@ $result = $conn->query($query);
         <h1 class="text-3xl font-bold"><i class="fas fa-list-ul mr-2"></i>All Itineraries</h1>
         <p class="text-green-100">Manage and organize trip itineraries</p>
       </div>
-      <a href="createitinerary.php" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+      <a href="createitinerary" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
         <i class="fas fa-plus mr-2"></i>Add New
       </a>
     </div>
@@ -85,7 +86,7 @@ $result = $conn->query($query);
             <td class="px-4 py-3 border-b"><?= $itineraryTitle ?></td>
             <td class="px-4 py-3 border-b"><?= $daysList ?></td>
             <td class="px-4 py-3 border-b text-center space-x-4">
-              <a href="edititinerary.php?id=<?= $row['itinerary_id'] ?>" 
+              <a href="edititinerary?id=<?= $row['itinerary_id'] ?>" 
                  class="text-blue-600 hover:text-blue-800 transition">
                  <i class="fas fa-edit"></i>
               </a>
@@ -111,7 +112,7 @@ $result = $conn->query($query);
         <h3 class="text-lg font-semibold mb-4">Confirm Delete</h3>
         <p class="text-gray-600 mb-6">Are you sure you want to delete this itinerary?</p>
         <div class="flex justify-center space-x-4">
-          <form method="post" action="deleteitinerary.php">
+          <form method="post" action="deleteitinerary">
             <input type="hidden" name="id" :value="deleteId">
             <button type="submit" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition">
               Delete

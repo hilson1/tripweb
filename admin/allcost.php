@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
@@ -77,7 +78,7 @@ $result = $conn->query($sql);
                   </ul>
                 </td>
                 <td class="border p-3 text-center">
-                  <a href="editcost.php?id=<?= $row['costid'] ?>" class="text-blue-600 hover:text-blue-800 mr-3"><i class="fas fa-edit"></i></a>
+                  <a href="editcost?id=<?= $row['costid'] ?>" class="text-blue-600 hover:text-blue-800 mr-3"><i class="fas fa-edit"></i></a>
                   <a href="?delete=<?= $row['costid'] ?>" class="text-red-600 hover:text-red-800" onclick="return confirm('Delete this cost?');"><i class="fas fa-trash"></i></a>
                 </td>
               </tr>

@@ -1,9 +1,10 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 
 // Check if activity name is provided
 if (!isset($_GET['name']) || empty($_GET['name'])) {
-    header("Location: allactivities.php");
+    header("Location: allactivities");
     exit();
 }
 
@@ -18,7 +19,7 @@ $activity = $result->fetch_assoc();
 $stmt->close();
 
 if (!$activity) {
-    header("Location: allactivities.php");
+    header("Location: allactivities");
     exit();
 }
 
@@ -78,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $update_stmt->bind_param("ssss", $new_activity_name, $description, $image_path, $original_name);
 
     if ($update_stmt->execute()) {
-        echo "<script>alert('Activity updated successfully!'); window.location.href='allactivities.php';</script>";
+        echo "<script>alert('Activity updated successfully!'); window.location.href='allactivities';</script>";
         exit();
     } else {
         echo "<script>alert('Error updating activity: " . addslashes($conn->error) . "');</script>";
@@ -118,7 +119,7 @@ $conn->close();
                 </h1>
                 <p class="text-blue-100">Update activity information</p>
               </div>
-              <a href="allactivities.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all duration-300">
+              <a href="allactivities" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all duration-300">
                 <i class="fas fa-arrow-left mr-2"></i>Back to List
               </a>
             </div>
@@ -186,7 +187,7 @@ $conn->close();
               </div>
 
               <div class="col-span-2 flex justify-end gap-4 pt-6">
-                <button type="button" onclick="window.location.href='allactivities.php'"
+                <button type="button" onclick="window.location.href='allactivities'"
                         class="px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-300">
                   <i class="fas fa-times mr-2"></i>Cancel
                 </button>

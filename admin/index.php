@@ -1,10 +1,5 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: frontend/admin-login.php");
-    exit;
-}
-
+include __DIR__ . '/auth-check.php';
 include 'frontend/connection.php'; // must define $conn
 
 // Tables to count

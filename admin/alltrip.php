@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 session_start();
 
@@ -136,7 +137,7 @@ $result = $stmt->get_result();
 
         <!-- Add New Trip Button -->
         <div class="mb-6 flex justify-end">
-          <a href="createtrip.php" class="btn-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
+          <a href="createtrip" class="btn-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
             <i class="fas fa-plus mr-2"></i>Add New Trip
           </a>
         </div>
@@ -245,7 +246,7 @@ $result = $stmt->get_result();
                   </td>
                   <td class="py-4 px-6">
                     <div class="flex space-x-2">
-                      <a href="edittrip.php?id=<?php echo $trip['tripid']; ?>" 
+                      <a href="edittrip?id=<?php echo $trip['tripid']; ?>" 
                          class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
                         <i class="fas fa-edit"></i>
                       </a>

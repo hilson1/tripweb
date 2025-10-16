@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 session_start();
 
@@ -39,11 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$stmt->execute()) throw new Exception("Error: " . $stmt->error);
 
         $_SESSION['message'] = "Success: Destination updated successfully!";
-        header("Location: alldestination.php");
+        header("Location: alldestination");
         exit();
     } catch (Exception $e) {
         $_SESSION['message'] = $e->getMessage();
-        header("Location: editdestination.php?name=" . urlencode($destination_name));
+        header("Location: editdestination?name=" . urlencode($destination_name));
         exit();
     }
 } else {
@@ -56,12 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $destination = $result->fetch_assoc();
         if (!$destination) {
             $_SESSION['message'] = "Error: Destination not found";
-            header("Location: alldestination.php");
+            header("Location: alldestination");
             exit();
         }
     } else {
         $_SESSION['message'] = "Error: Destination name not specified";
-        header("Location: alldestination.php");
+        header("Location: alldestination");
         exit();
     }
 }
@@ -91,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <h1 class="text-3xl font-bold mb-2"><i class="fas fa-map-marker-alt mr-3"></i>Edit Destination</h1>
               <p class="text-blue-100">Update destination information</p>
             </div>
-            <a href="alldestination.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all">
+            <a href="alldestination" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-2 rounded-lg flex items-center transition-all">
               <i class="fas fa-arrow-left mr-2"></i>Back to List
             </a>
           </div>
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php unset($_SESSION['message']); ?>
         <?php endif; ?>
 
-        <form action="editdestination.php" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="editdestination" method="POST" enctype="multipart/form-data" class="space-y-6">
           <input type="hidden" name="original_name" value="<?= htmlspecialchars($destination['distination']) ?>">
           <input type="hidden" name="current_image" value="<?= htmlspecialchars($destination['main_image']) ?>">
 
@@ -160,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="col-span-2 flex justify-end gap-4 pt-6">
-              <a href="alldestination.php" class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+              <a href="alldestination" class="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
                 <i class="fas fa-times mr-2"></i>Cancel
               </a>
               <button type="submit"

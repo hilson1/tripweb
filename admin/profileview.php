@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require 'frontend/connection.php';
 session_start();
 
@@ -64,7 +65,7 @@ $admin = $stmt->get_result()->fetch_assoc();
           <p class="text-gray-600 mt-1"><i class="fas fa-envelope mr-2 text-blue-500"></i><?php echo htmlspecialchars($admin['email']); ?></p>
 
           <div class="flex justify-center mt-6 space-x-4">
-            <a href="changepassword.php" 
+            <a href="changepassword" 
                class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg transition">
               <i class="fas fa-key mr-2"></i>Change Password
             </a>

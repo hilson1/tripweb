@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require 'frontend/connection.php';
 session_start();
 
@@ -62,12 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $_SESSION['message'] = "Success: Trip Type added successfully!";
-        header("Location: alltriptype.php");
+        header("Location: alltriptype");
         exit();
 
     } catch (Exception $e) {
         $_SESSION['message'] = $e->getMessage();
-        header("Location: createtriptype.php");
+        header("Location: createtriptype");
         exit();
     }
 }
@@ -104,7 +105,7 @@ $conn->close();
                         </h1>
                         <p class="text-blue-100">Create a new trip type category for your travel offerings</p>
                     </div>
-                    <a href="alltriptype.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
+                    <a href="alltriptype" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
                         <i class="fas fa-arrow-left mr-2"></i>Back to List
                     </a>
                 </div>
@@ -135,7 +136,7 @@ $conn->close();
                             <input type="file" name="act_image" accept="image/*" required class="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none">
                         </div>
                         <div class="flex justify-end space-x-4">
-                            <a href="alltriptype.php" class="px-6 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
+                            <a href="alltriptype" class="px-6 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
                                 <i class="fas fa-times mr-2"></i>Cancel
                             </a>
                             <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">

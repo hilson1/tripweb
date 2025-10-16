@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 
 // Handle delete request
@@ -111,7 +112,7 @@ $result = $stmt->get_result();
                      class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
           </div>
-          <a href="createtriptype.php" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center shadow-lg">
+          <a href="createtriptype" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center shadow-lg">
             <i class="fas fa-plus mr-2"></i>Add New Trip Type
           </a>
         </div>
@@ -171,7 +172,7 @@ $result = $stmt->get_result();
                   </td>
                   <td class="py-4 px-6">
                     <div class="flex space-x-2">
-                      <a href="edittriptype.php?name=<?php echo urlencode($triptype['triptype']); ?>" 
+                      <a href="edittriptype?name=<?php echo urlencode($triptype['triptype']); ?>" 
                          class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
                         <i class="fas fa-edit"></i>
                       </a>
