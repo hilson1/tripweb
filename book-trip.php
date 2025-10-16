@@ -10,7 +10,7 @@ if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
 } else {
     // Handle case where user doesn't exist
-    header('location:login.php');
+    header('location:login');
     exit;
 }
 if (isset($_GET['tripid'])) {
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     );
 
     if ($stmt3->execute()) {
-        echo "<script>alert('Booking Successful'); window.location.href = 'success.php';</script>";
+        echo "<script>alert('Booking Successful'); window.location.href = 'success';</script>";
     } else {
         echo "<script>alert('Error: " . addslashes($stmt3->error) . "');</script>";
     }

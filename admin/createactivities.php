@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Handle file upload if image is provided
     if (isset($_FILES['act_image']) && $_FILES['act_image']['error'] === UPLOAD_ERR_OK) {
-        $target_dir = "../uploads/activity/";
+        $target_dir = "../assets/activity/";
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $target_file = $target_dir . $new_filename;
                 
                 if (move_uploaded_file($_FILES["act_image"]["tmp_name"], $target_file)) {
-                    $act_image = "uploads/activity/" . $new_filename;
+                    $act_image = "assets/activity/" . $new_filename;
                 } else {
                     echo "<script>alert('Error uploading image.');</script>";
                 }

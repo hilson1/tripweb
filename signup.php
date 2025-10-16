@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Send OTP to the user's email
             if (sendOtpEmail($email, $otp)) {
                 // Redirect to OTP verification page
-                header('location: verify_otp.php');
+                header('location: verify_otp');
                 exit();
             } else {
                 $FailMsg = "Failed to send OTP. Please try again.";

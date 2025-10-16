@@ -14,7 +14,7 @@ if (isset($_POST['delete_activity'])) {
             $stmt->bind_param("s", $triptype_name);
             
             if ($stmt->execute()) {
-                header("Location: alltriptype.php?delete=success");
+                header("Location: alltriptype?delete=success");
                 exit();
             } else {
                 $delete_error = "Error deleting: " . $stmt->error;

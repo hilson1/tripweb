@@ -26,12 +26,21 @@ if (isset($_GET['activity-is'])) {
     $stmt->close();
 }
 
-// Image handling
+// Image handling — must come AFTER database fetch
 $main_image_filename = basename($main_image_filename);
-$background_url = "assets/activity/" . htmlspecialchars($main_image_filename);
-if (empty($main_image_filename) || !file_exists($background_url)) {
+
+if (str_starts_with($main_image_filename, 'assets/')) {
+    $image_path = __DIR__ . '/' . $main_image_filename;
+    $background_url = $main_image_filename;
+} else {
+    $image_path = __DIR__ . "/assets/activity/" . $main_image_filename;
+    $background_url = "assets/activity/" . htmlspecialchars($main_image_filename);
+}
+
+if (!file_exists($image_path)) {
     $background_url = "assets/activity/default-activity.jpg";
 }
+
 
 // Fetch related trips
 $sql_trips = "SELECT trips.*, trip_images.main_image 
@@ -213,7 +222,7 @@ $conn->close();
         <div class="card">
           <div class="position-relative">
             <div class="carousel">
-              <a href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
+              <a href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
                 <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" alt="<?php echo htmlspecialchars($trip['title']); ?>">
               </a>
             </div>
@@ -225,7 +234,7 @@ $conn->close();
             <p class="mb-1"><i class="fas fa-users text-success"></i> <?php echo htmlspecialchars($trip['groupsize']); ?> People</p>
             <p class="mb-1"><i class="fas fa-route text-success"></i> <?php echo htmlspecialchars($trip['triptype']); ?></p>
             <div class="price fw-bold mt-2">$<?php echo number_format($trip['price']); ?></div>
-            <a class="btn btn-warning w-100 mt-2" href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">View Details</a>
+            <a class="btn btn-warning w-100 mt-2" href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">View Details</a>
           </div>
         </div>
     <?php }

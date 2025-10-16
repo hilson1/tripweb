@@ -213,7 +213,7 @@ $conn->close();
         <div class="card">
           <div class="position-relative">
             <div class="carousel">
-              <a href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
+              <a href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
                 <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" alt="<?php echo htmlspecialchars($trip['title']); ?>">
               </a>
             </div>
@@ -225,7 +225,7 @@ $conn->close();
             <p class="mb-1"><i class="fas fa-users text-success"></i> <?php echo htmlspecialchars($trip['groupsize']); ?> People</p>
             <p class="mb-1"><i class="fas fa-hiking text-success"></i> <?php echo htmlspecialchars($trip['activity']); ?></p>
             <div class="price fw-bold mt-2">$<?php echo number_format($trip['price']); ?></div>
-            <a class="btn btn-warning w-100 mt-2" href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">View Details</a>
+            <a class="btn btn-warning w-100 mt-2" href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">View Details</a>
           </div>
         </div>
     <?php }

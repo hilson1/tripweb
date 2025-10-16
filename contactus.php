@@ -14,15 +14,14 @@ include("connection.php");
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
   <style>
-    body {font-family: 'Roboto', sans-serif;}
-    .hero {
+    .heros {
       background: url('assets/img/contact.jpg') no-repeat center center/cover;
       color: white; text-align: center; padding: 150px 20px;
     }
-    .hero h1 {font-size: 3.5rem; margin-bottom: 20px; font-family: 'Pacifico', cursive;}
+    .heros h1 {font-size: 3.5rem; margin-bottom: 20px; font-family: 'Pacifico', cursive;}
     .contact-section {padding: 60px 0;}
-    .card {border: none; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
-    .btn-warning {background-color: #f4a261; border: none; font-weight: bold;}
+    .cards {border: none; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
+    .btn-warning {background-color: #f4a261; border: none;}
     .btn-warning:hover {background-color: #e76f51;}
     .contact-info {background-color: #008080; color: white; border-radius: 10px; padding: 30px;}
   </style>
@@ -30,7 +29,7 @@ include("connection.php");
 <body>
 <?php include("frontend/header.php"); ?>
 
-<header class="hero">
+<header class="heros">
   <h1>CONTACT US</h1>
   <p>We’d love to hear from you — reach out anytime!</p>
 </header>
@@ -40,7 +39,7 @@ include("connection.php");
     <div class="row g-4">
 
       <div class="col-md-7">
-        <div class="card p-4">
+        <div class="cards p-4">
           <h3 class="mb-3 text-center">Get in Touch</h3>
             <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
               <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE">

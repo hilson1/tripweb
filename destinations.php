@@ -26,19 +26,10 @@ if (isset($_GET['destination-is'])) {
     $stmt->close();
 }
 
-// Image handling
-// $main_image_filename = basename($main_image_filename);
-// $image_path = __DIR__ . "/assets/destinations/" . $main_image_filename;
-// $background_url = "assets/destinations/" . htmlspecialchars($main_image_filename);
-
-// if (empty($main_image_filename) || !file_exists($image_path)) {
-//     $background_url = "assets/img/destinations/default-destination.jpg";
-// }
-
 $main_image_filename = basename($main_image_filename);
-$background_url = "uploads/destinations/" . htmlspecialchars($main_image_filename);
+$background_url = "assets/destinations/" . htmlspecialchars($main_image_filename);
 if (empty($main_image_filename) || !file_exists($background_url)) {
-    $background_url = "uploads/destinations/default-activity.jpg";
+    $background_url = "assets/destinations/default-activity.jpg";
 }
 
 // Fetch related trips
@@ -222,7 +213,7 @@ $conn->close();
         <div class="card">
           <div class="position-relative">
             <div class="carousel">
-              <a href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
+              <a href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
                 <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" class="img-fluid slide active" alt="<?php echo htmlspecialchars($trip['title']); ?>">
               </a>
             </div>
@@ -234,7 +225,7 @@ $conn->close();
             <p class="mb-1"><i class="fas fa-users text-success"></i> <?php echo htmlspecialchars($trip['groupsize']); ?> People</p>
             <p class="mb-1"><i class="fas fa-route text-success"></i> <?php echo htmlspecialchars($trip['triptype']); ?></p>
             <div class="price fw-bold mt-2">$<?php echo number_format($trip['price']); ?></div>
-            <a class="btn btn-warning w-100 mt-2" href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">View Details</a>
+            <a class="btn btn-warning w-100 mt-2" href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">View Details</a>
           </div>
         </div>
     <?php }

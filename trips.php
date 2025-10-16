@@ -81,7 +81,7 @@ $trip_result = $stmt_trips->get_result();
                 <?php while ($trip = $trip_result->fetch_assoc()): ?>
                     <div class="card">
                         <div class="position-relative">
-                            <a href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
+                            <a href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
                                 <img src="<?php echo htmlspecialchars($trip['main_image']); ?>" class="img-fluid" alt="<?php echo htmlspecialchars($trip['title']); ?>">
                             </a>
                             <span class="badge-featured">Featured</span>
@@ -109,7 +109,7 @@ $trip_result = $stmt_trips->get_result();
 
                             <div class="price mt-3">$<?php echo number_format($trip['price']); ?></div>
 
-                            <a class="btn btn-view-details w-100 mt-3" href="view-trip.php?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
+                            <a class="btn btn-view-details w-100 mt-3" href="view-trip?tripid=<?php echo htmlspecialchars($trip['tripid']); ?>">
                                 VIEW DETAILS
                             </a>
                             <p class="text-muted small mt-2">Next Departure: Feb 3, 2025 | Feb 4, 2025</p>
