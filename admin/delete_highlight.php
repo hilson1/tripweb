@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
@@ -12,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
         ? "Success: Highlight deleted successfully."
         : "Error: Failed to delete highlight.";
 
-    header("Location: allhighlight.php");
+    header("Location: allhighlight");
     exit();
 }
 ?>

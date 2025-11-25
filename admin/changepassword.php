@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require 'frontend/connection.php';
 session_start();
 

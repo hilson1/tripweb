@@ -1,11 +1,12 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
 // Get ID
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) {
-    header("Location: allhighlight.php");
+    header("Location: allhighlight");
     exit();
 }
 
@@ -17,7 +18,7 @@ $result = $stmt->get_result();
 $highlight = $result->fetch_assoc();
 if (!$highlight) {
     $_SESSION['message'] = "Error: Highlight not found.";
-    header("Location: allhighlight.php");
+    header("Location: allhighlight");
     exit();
 }
 
@@ -55,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['message'] = "Error: Failed to update highlight.";
     }
 
-    header("Location: allhighlight.php");
+    header("Location: allhighlight");
     exit();
 }
 ?>
@@ -82,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <h1 class="text-3xl font-bold mb-2"><i class="fas fa-edit mr-3"></i>Edit Trip Highlight</h1>
           <p class="text-blue-100">Modify up to six key highlights for this trip</p>
         </div>
-        <a href="allhighlight.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
+        <a href="allhighlight" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
           <i class="fas fa-arrow-left mr-2"></i>Back to List
         </a>
       </div>
@@ -117,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <?php endfor; ?>
 
           <div class="flex justify-end space-x-4">
-            <a href="allhighlight.php" class="px-6 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
+            <a href="allhighlight" class="px-6 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
               <i class="fas fa-times mr-2"></i>Cancel
             </a>
             <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">

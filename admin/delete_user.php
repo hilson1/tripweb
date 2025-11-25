@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require 'frontend/connection.php';
 
 // Check if ID parameter exists
@@ -14,13 +15,13 @@ if (isset($_GET['id'])) {
         // Success message
         echo "<script>
             alert('User deleted successfully!');
-            window.location.href = 'users.php';
+            window.location.href = 'users';
         </script>";
     } else {
         // Error message
         echo "<script>
             alert('Error deleting user: " . $conn->error . "');
-            window.location.href = 'users.php';
+            window.location.href = 'users';
         </script>";
     }
     
@@ -29,7 +30,7 @@ if (isset($_GET['id'])) {
     // No ID provided
     echo "<script>
         alert('No user ID provided!');
-        window.location.href = 'users.php';
+        window.location.href = 'users';
     </script>";
 }
 

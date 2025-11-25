@@ -1,5 +1,7 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
+
 
 // Get fresh data from the trip_booking table
 $stmt = $conn->prepare("SELECT * FROM trip_bookings ORDER BY id ");

@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "../connection.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -56,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_param("ssssssssssssi", $userid, $phone, $address, $zipcode, $country, $firstname, $lastname, $username, $email, $hashed_password, $profilepic, $status);
         
         if ($stmt->execute()) {
-            echo "<script>alert('User created successfully'); window.location.href = 'viewuser.php';</script>";
+            echo "<script>alert('User created successfully'); window.location.href = 'viewuser';</script>";
         } else {
             echo "<script>alert('Error: " . addslashes($stmt->error) . "');</script>";
         }
@@ -187,7 +188,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             
             <div class="flex justify-end space-x-4 mt-8">
-              <button type="button" class="btn-secondary" onclick="window.location.href='viewuser.php'">Cancel</button>
+              <button type="button" class="btn-secondary" onclick="window.location.href='viewuser'">Cancel</button>
               <button type="submit" class="btn-primary">Create User</button>
             </div>
           </form>

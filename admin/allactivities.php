@@ -1,5 +1,7 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
+
  
 // Handle delete request
 if (isset($_POST['delete_activity'])) {

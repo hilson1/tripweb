@@ -26,7 +26,7 @@
     <div class="flex h-screen">
         <!-- Sidebar -->
         <?php
-        include("frontend/asidebar.php");
+        include("frontend/sidebar.php");
         ?>
 
         <!-- Main Content -->

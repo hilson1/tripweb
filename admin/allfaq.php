@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
 session_start();
 
@@ -31,7 +32,7 @@ $result = $conn->query($query);
         <h1 class="text-3xl font-bold"><i class="fas fa-question-circle mr-2"></i>All FAQs</h1>
         <p class="text-green-100">Manage all frequently asked questions</p>
       </div>
-      <a href="createfaq.php" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+      <a href="createfaq" class="bg-white bg-opacity-20 px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
         <i class="fas fa-plus mr-2"></i>Add New
       </a>
     </div>
@@ -65,7 +66,7 @@ $result = $conn->query($query);
             <td class="px-4 py-3 border-b"><?= htmlspecialchars($row['question']) ?></td>
             <td class="px-4 py-3 border-b text-gray-600"><?= htmlspecialchars($row['answer']) ?></td>
             <td class="px-4 py-3 border-b text-center space-x-4">
-              <a href="editfaq.php?id=<?= $row['faqid'] ?>" class="text-blue-600 hover:text-blue-800">
+              <a href="editfaq?id=<?= $row['faqid'] ?>" class="text-blue-600 hover:text-blue-800">
                 <i class="fas fa-edit"></i>
               </a>
               <button @click="showConfirm = true; deleteId = <?= $row['faqid'] ?>;"
@@ -90,7 +91,7 @@ $result = $conn->query($query);
         <h3 class="text-lg font-semibold mb-4">Confirm Delete</h3>
         <p class="text-gray-600 mb-6">Are you sure you want to delete this FAQ?</p>
         <div class="flex justify-center space-x-4">
-          <form method="post" action="deletefaq.php">
+          <form method="post" action="deletefaq">
             <input type="hidden" name="id" :value="deleteId">
             <button type="submit" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition">
               Delete

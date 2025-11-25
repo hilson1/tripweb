@@ -1,4 +1,5 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require "../connection.php";
 
 // Handle admin user creation
@@ -212,7 +213,7 @@ if ($trip_query && $trip_query->num_rows > 0) {
           </div>
 
           <div class="flex justify-end mt-8 space-x-4">
-            <button type="button" class="bg-gray-400 text-white px-5 py-2 rounded-lg" onclick="window.location.href='view_bookings.php'">Cancel</button>
+            <button type="button" class="bg-gray-400 text-white px-5 py-2 rounded-lg" onclick="window.location.href='view_bookings'">Cancel</button>
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">Create Booking</button>
           </div>
         </form>

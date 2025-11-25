@@ -1,8 +1,9 @@
 <?php
+include __DIR__ . '/auth-check.php';
 require '../connection.php';
 
 if (!isset($_GET['name']) || empty($_GET['name'])) {
-    header("Location: allactivities.php");
+    header("Location: allactivities");
     exit();
 }
 
@@ -26,9 +27,9 @@ if ($activity) {
             unlink("../assets/activity/" . $activity['main_image']);
         }
         
-        echo "<script>alert('Activity deleted successfully'); window.location.href = 'allactivities.php';</script>";
+        echo "<script>alert('Activity deleted successfully'); window.location.href = 'allactivities';</script>";
     } else {
-        echo "<script>alert('Error deleting activity: " . addslashes($conn->error) . "'); window.location.href = 'allactivities.php';</script>";
+        echo "<script>alert('Error deleting activity: " . addslashes($conn->error) . "'); window.location.href = 'allactivities';</script>";
     }
     
     $delete_stmt->close();

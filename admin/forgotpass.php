@@ -150,7 +150,7 @@ $conn->close();
                 <input type="email" id="email" name="email" placeholder="Email" required>
                 <button type="submit">Reset Password</button>
             </form>
-            <button class="back-button" onclick="window.location.href='adminlogin.php'">Back to Login</button>
+            <button class="back-button" onclick="window.location.href='adminlogin'">Back to Login</button>
         <?php else: ?>
             <h2>Reset Password</h2>
             <form method="POST" action="">
@@ -158,7 +158,7 @@ $conn->close();
                 <input type="password" id="new_password" name="new_password" placeholder="New Password" required>
                 <button type="submit">Submit New Password</button>
             </form>
-            <button class="back-button" onclick="window.location.href='adminlogin.php'">Back to Login</button>
+            <button class="back-button" onclick="window.location.href='/admin-login'">Back to Login</button>
         <?php endif; ?>
     </div>
 
