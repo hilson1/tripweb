@@ -108,22 +108,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-            <input type="text" name="title" value="<?= htmlspecialchars($trip['title']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="text" name="title" value="<?= htmlspecialchars($trip['title']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-            <input type="number" name="price" value="<?= htmlspecialchars($trip['price']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="number" name="price" value="<?= htmlspecialchars($trip['price']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div class="col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea name="description" rows="3" class="w-full border-gray-300 rounded p-2" required><?= htmlspecialchars($trip['description']) ?></textarea>
+            <textarea name="description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required><?= htmlspecialchars($trip['description']) ?></textarea>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Transportation</label>
-            <select name="Transportation" class="w-full border-gray-300 rounded p-2" required>
+            <select name="Transportation" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <option value="Bus" <?= $trip['transportation'] == 'Bus' ? 'selected' : '' ?>>Bus</option>
               <option value="Car" <?= $trip['transportation'] == 'Car' ? 'selected' : '' ?>>Car</option>
               <option value="Helicopter" <?= $trip['transportation'] == 'Helicopter' ? 'selected' : '' ?>>Helicopter</option>
@@ -132,17 +132,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Accommodation</label>
-            <input type="text" name="Accomodation" value="<?= htmlspecialchars($trip['accomodation']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="text" name="Accomodation" value="<?= htmlspecialchars($trip['accomodation']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Maximum Altitude</label>
-            <input type="text" name="Maximum" value="<?= htmlspecialchars($trip['maximumaltitude']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="text" name="Maximum" value="<?= htmlspecialchars($trip['maximumaltitude']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Departure From</label>
-            <select name="Departure" class="w-full border-gray-300 rounded p-2" required>
+            <select name="Departure" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <option value="Kathmandu" <?= $trip['departurefrom'] == 'Kathmandu' ? 'selected' : '' ?>>Kathmandu</option>
               <option value="Lalitpur" <?= $trip['departurefrom'] == 'Lalitpur' ? 'selected' : '' ?>>Lalitpur</option>
               <option value="Chitwan" <?= $trip['departurefrom'] == 'Chitwan' ? 'selected' : '' ?>>Chitwan</option>
@@ -151,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Best Season</label>
-            <select name="season" class="w-full border-gray-300 rounded p-2" required>
+            <select name="season" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <option value="Winter" <?= $trip['bestseason'] == 'Winter' ? 'selected' : '' ?>>Winter</option>
               <option value="Summer" <?= $trip['bestseason'] == 'Summer' ? 'selected' : '' ?>>Summer</option>
               <option value="Spring" <?= $trip['bestseason'] == 'Spring' ? 'selected' : '' ?>>Spring</option>
@@ -161,7 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Trip Type</label>
-            <select name="triptype" class="w-full border-gray-300 rounded p-2" required>
+            <select name="triptype" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <?php while ($row = $tripTypesResult->fetch_assoc()): ?>
                 <option value="<?= $row['triptype'] ?>" <?= $row['triptype'] == $trip['triptype'] ? 'selected' : '' ?>><?= $row['triptype'] ?></option>
               <?php endwhile; ?>
@@ -170,17 +170,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Meals</label>
-            <input type="text" name="meals" value="<?= htmlspecialchars($trip['meals']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="text" name="meals" value="<?= htmlspecialchars($trip['meals']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
-            <input type="text" name="language" value="<?= htmlspecialchars($trip['language']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="text" name="language" value="<?= htmlspecialchars($trip['language']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Fitness Level</label>
-            <select name="fitnesslevel" class="w-full border-gray-300 rounded p-2" required>
+            <select name="fitnesslevel" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <option value="Beginner" <?= $trip['fitnesslevel'] == 'Beginner' ? 'selected' : '' ?>>Beginner</option>
               <option value="Medium" <?= $trip['fitnesslevel'] == 'Medium' ? 'selected' : '' ?>>Medium</option>
               <option value="High" <?= $trip['fitnesslevel'] == 'High' ? 'selected' : '' ?>>High</option>
@@ -189,7 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Group Size</label>
-            <select name="groupsize" class="w-full border-gray-300 rounded p-2" required>
+            <select name="groupsize" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <option value="2" <?= $trip['groupsize'] == '2' ? 'selected' : '' ?>>2</option>
               <option value="2-6" <?= $trip['groupsize'] == '2-6' ? 'selected' : '' ?>>2-6</option>
               <option value="6-14" <?= $trip['groupsize'] == '6-14' ? 'selected' : '' ?>>6-14</option>
@@ -199,17 +199,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Age</label>
-            <input type="number" name="minimumage" value="<?= htmlspecialchars($trip['minimumage']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="number" name="minimumage" value="<?= htmlspecialchars($trip['minimumage']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Maximum Age</label>
-            <input type="number" name="maximumage" value="<?= htmlspecialchars($trip['maximumage']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="number" name="maximumage" value="<?= htmlspecialchars($trip['maximumage']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-            <select name="location" class="w-full border-gray-300 rounded p-2" required>
+            <select name="location" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <?php while ($row = $locationsResult->fetch_assoc()): ?>
                 <option value="<?= $row['distination'] ?>" <?= $row['distination'] == $trip['location'] ? 'selected' : '' ?>><?= $row['distination'] ?></option>
               <?php endwhile; ?>
@@ -218,7 +218,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-            <select name="activity" class="w-full border-gray-300 rounded p-2" required>
+            <select name="activity" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
               <?php while ($row = $activitiesResult->fetch_assoc()): ?>
                 <option value="<?= $row['activity'] ?>" <?= $row['activity'] == $trip['activity'] ? 'selected' : '' ?>><?= $row['activity'] ?></option>
               <?php endwhile; ?>
@@ -227,7 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Duration</label>
-            <input type="text" name="duration" value="<?= htmlspecialchars($trip['duration']) ?>" class="w-full border-gray-300 rounded p-2" required>
+            <input type="text" name="duration" value="<?= htmlspecialchars($trip['duration']) ?>" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" required>
           </div>
         </div>
 
