@@ -22,9 +22,18 @@ $admin = $stmt->get_result()->fetch_assoc();
   <link rel="stylesheet" href="frontend/sidebar.css" />
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
 
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
-  <div class="flex h-screen">
+  <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
     <!-- Header and Sidebar -->
     <?php include("frontend/header.php"); ?>
     <?php include("frontend/sidebar.php"); ?>
@@ -33,7 +42,7 @@ $admin = $stmt->get_result()->fetch_assoc();
       <div class="p-6">
 
         <!-- Page Header -->
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white flex justify-between items-center">
+        <div class="gradient-bg rounded-2xl p-6 text-white flex justify-between items-center">
           <div>
             <h1 class="text-3xl font-bold mb-2">
               <i class="fas fa-user mr-3"></i>Admin Profile

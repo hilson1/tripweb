@@ -66,9 +66,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <meta charset="UTF-8">
 <title>Edit Highlight - ThankYouNepalTrip</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="frontend/sidebar.css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="frontend/sidebar.css">
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
 </head>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
 <div class="flex h-screen">
   <?php include("frontend/header.php"); ?>
@@ -78,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="p-6">
 
       <!-- Header -->
-      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white flex justify-between items-center">
+      <div class="gradient-bg rounded-2xl p-6 text-white flex justify-between items-center">
         <div>
           <h1 class="text-3xl font-bold mb-2"><i class="fas fa-edit mr-3"></i>Edit Trip Highlight</h1>
           <p class="text-blue-100">Modify up to six key highlights for this trip</p>
@@ -121,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <a href="allhighlight" class="px-6 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">
               <i class="fas fa-times mr-2"></i>Cancel
             </a>
-            <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button type="submit" class="px-8 py-3 gradient-bg text-white rounded-lg hover:bg-blue-700">
               <i class="fas fa-save mr-2"></i>Update Highlights
             </button>
           </div>

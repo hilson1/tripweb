@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
 
 // Fetch trips for booking form
 $trips = [];
-$trip_query = $conn->query("SELECT tripid, triptype FROM trips");
+$trip_query = $conn->query("SELECT tripid, title, triptype FROM trips");
 if ($trip_query && $trip_query->num_rows > 0) {
     while ($row = $trip_query->fetch_assoc()) {
         $trips[] = $row;
@@ -112,8 +112,8 @@ if ($trip_query && $trip_query->num_rows > 0) {
               <select name="trip_id" id="trip_id" class="form-input" required onchange="updateTripName()">
                 <option value="">-- Select a Trip --</option>
                 <?php foreach ($trips as $trip): ?>
-                  <option value="<?= $trip['tripid'] ?>" data-name="<?= htmlspecialchars($trip['triptype']) ?>">
-                    <?= htmlspecialchars($trip['triptype']) ?>
+                  <option value="<?= $trip['tripid'] ?>" data-name="<?= htmlspecialchars($trip['title']) ?>">
+                    <?= htmlspecialchars($trip['title']) ?>
                   </option>
                 <?php endforeach; ?>
               </select>
@@ -213,7 +213,7 @@ if ($trip_query && $trip_query->num_rows > 0) {
           </div>
 
           <div class="flex justify-end mt-8 space-x-4">
-            <button type="button" class="bg-gray-400 text-white px-5 py-2 rounded-lg" onclick="window.location.href='view_bookings'">Cancel</button>
+            <button type="button" class="bg-gray-400 text-white px-5 py-2 rounded-lg" onclick="window.location.href='allbooking'">Cancel</button>
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">Create Booking</button>
           </div>
         </form>

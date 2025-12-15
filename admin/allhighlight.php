@@ -20,6 +20,15 @@ $result = $conn->query($query);
 <link rel="stylesheet" href="frontend/sidebar.css" />
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
 <div class="flex h-screen">
   <?php include("frontend/header.php"); ?>
@@ -29,7 +38,7 @@ $result = $conn->query($query);
     <div class="p-6" x-data="{ showConfirm: false, deleteId: null }">
       
       <!-- Header -->
-      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white flex justify-between items-center">
+      <div class="gradient-bg rounded-2xl p-6 text-white flex justify-between items-center">
         <div>
           <h1 class="text-3xl font-bold mb-2"><i class="fas fa-list mr-3"></i>All Trip Highlights</h1>
           <p class="text-blue-100">View, edit, or delete trip highlights</p>
