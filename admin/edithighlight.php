@@ -1,7 +1,6 @@
 <?php
 include __DIR__ . '/auth-check.php';
 require "frontend/connection.php";
-session_start();
 
 // Get ID
 $id = intval($_GET['id'] ?? 0);
@@ -35,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmt = $conn->prepare("
         UPDATE highlights 
-        SET tripid=?, title1=?, title2=?, title3=?, title4=?, title5=?, title6=? 
+        SET tripid=?, highlight_title=?, highlight_title1=?, highlight_title2=?, highlight_title3=?, highlight_title4=?, highlight_title5=? 
         WHERE id=?
     ");
     $stmt->bind_param(
@@ -115,8 +114,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </select>
           </div>
 
-          <?php for ($i = 1; $i <= 6; $i++): 
-            $field = "title$i";
+          <?php 
+          // Map database columns to display numbers
+          $highlightFields = [
+              1 => 'highlight_title',
+              2 => 'highlight_title1', 
+              3 => 'highlight_title2',
+              4 => 'highlight_title3',
+              5 => 'highlight_title4',
+              6 => 'highlight_title5'
+          ];
+          
+          for ($i = 1; $i <= 6; $i++): 
+            $field = $highlightFields[$i];
           ?>
             <div class="border rounded-xl p-5 bg-gray-50">
               <h3 class="text-lg font-semibold mb-3 text-blue-700">
@@ -124,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               </h3>
               <input type="text" name="title_<?= $i ?>" 
                      value="<?= htmlspecialchars($highlight[$field] ?? '') ?>" 
-                     placeholder="Enter highlight title <?= $i ?>" 
+                     placeholder="Enter highlight title <?= $i ?> (optional)" 
                      class="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500">
             </div>
           <?php endfor; ?>

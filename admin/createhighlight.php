@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <h1 class="text-3xl font-bold mb-2"><i class="fas fa-star mr-3"></i>Add Trip Highlights</h1>
           <p class="text-blue-100">Add up to six key highlights for a selected trip</p>
         </div>
-        <a href="allhighlights.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
+        <a href="allhighlight.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition">
           <i class="fas fa-arrow-left mr-2"></i>Back to List
         </a>
       </div>

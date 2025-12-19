@@ -271,12 +271,12 @@ $result = $stmt->get_result();
                   </td>
                   <td class="py-4 px-6">
                     <div class="flex justify-start space-x-2">
-                     <!-- Edit Button -->
+                     <!-- Edit Button
                       <button onclick="window.edit_user(<?php echo $user['userid']; ?>)" 
                         class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm transition flex items-center gap-1">
                         <i class="fas fa-edit text-xs"></i>
                         <span>Edit</span>
-                      </button>
+                      </button> -->
 
                       <!-- Delete Button -->
                       <button onclick="window.delete_user(<?php echo $user['userid']; ?>)" 

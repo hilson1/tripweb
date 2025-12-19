@@ -2,7 +2,8 @@
 <aside 
     class="sidebar fixed top-0 left-0 h-screen shadow-xl overflow-y-auto sidebar-scrollbar transition-transform duration-300 ease-in-out"
     :class="{ 'open': sidebarOpen }"
-  >
+    style="overflow-x: hidden !important;"
+>
     <div class="sidebar-header p-5 text-xl font-bold flex items-center">
       <i class="fas fa-mountain-sun mr-3"></i>
       <span>THANKYOUNEPALTRIP</span>

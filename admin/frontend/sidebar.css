@@ -9,17 +9,20 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   width: 260px;
+  overflow-x: hidden; /* Remove horizontal scrollbar */
 }
 
 .sidebar-header {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  word-wrap: break-word; /* Prevent text overflow */
 }
 
 .nav-link {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  word-wrap: break-word; /* Prevent text overflow */
 }
 
 .nav-link:hover {
@@ -42,10 +45,13 @@ body {
 
 .submenu {
   background: rgba(0, 0, 0, 0.1);
+  overflow-x: hidden; /* Prevent horizontal scroll in submenus */
 }
 
 .submenu-link {
   transition: all 0.2s ease;
+  word-wrap: break-word; /* Prevent text overflow */
+  white-space: normal; /* Allow text wrapping */
 }
 
 .submenu-link:hover {
@@ -57,7 +63,12 @@ body {
   transform: rotate(90deg);
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - vertical only */
+.sidebar-scrollbar {
+  overflow-y: auto;
+  overflow-x: hidden; /* Explicitly hide horizontal scroll */
+}
+
 .sidebar-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -69,6 +80,12 @@ body {
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
   border-radius: 3px;
+}
+
+/* Hide horizontal scrollbar for Firefox */
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
 }
 
 /* Top navbar styles */
