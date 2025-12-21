@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Create User - ThankYouNepalTrip</title>
+  <title>Create User</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -91,10 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <!-- Overlay for mobile sidebar -->
   <div class="overlay" :class="{ 'open': sidebarOpen }" @click="sidebarOpen = false"></div>
 
-  <!-- Top Navigation Bar -->
   <?php include 'frontend/header.php'; ?>
-
-  <!-- Sidebar -->
   <?php include 'frontend/sidebar.php'; ?>
 
   <!-- Main Content Area -->

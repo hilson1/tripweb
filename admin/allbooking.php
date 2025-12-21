@@ -71,7 +71,7 @@ $result = $stmt->get_result();
                   <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-calendar-check mr-2"></i>Departure Date</th>
                   <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-users mr-2"></i>Guests</th>
                   <th class="py-4 px-6 text-left font-semibold"><i class="fas fa-money-check-alt mr-2"></i>Payment Status</th>
-                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-credit-card mr-2"></i>Payment Mode</th>
+                  <th class="py-4 px-6 text-left font-semibold hidden-mobile"><i class="fas fa-credit-card mr-2"></i>Action</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
@@ -81,17 +81,13 @@ $result = $stmt->get_result();
                     $paymentStatusClass = '';
                     $paymentStatusText = '';
                     switch(strtolower($booking['payment_status'])) {
-                      case 'completed':
+                      case 'paid':
                         $paymentStatusClass = 'bg-green-500';
                         $paymentStatusText = 'Completed';
                         break;
-                      case 'pending':
-                        $paymentStatusClass = 'bg-yellow-500';
-                        $paymentStatusText = 'Pending';
-                        break;
-                      case 'failed':
+                      case 'not paid':
                         $paymentStatusClass = 'bg-red-500';
-                        $paymentStatusText = 'Failed';
+                        $paymentStatusText = 'Not Completed';
                         break;
                       default:
                         $paymentStatusClass = 'bg-gray-500';
@@ -143,10 +139,18 @@ $result = $stmt->get_result();
                       <?php echo $paymentStatusText; ?>
                     </span>
                   </td>
-                  <td class="py-4 px-6 hidden-mobile">
-                    <span class="text-gray-700">
-                      <?php echo htmlspecialchars($booking["payment_mode"] ?: 'N/A'); ?>
-                    </span>
+                  <td class="py-4 px-6">
+                    <div class="flex space-x-2">
+                      <a href="editbooking?id=<?php echo urlencode($booking['id']); ?>" 
+                         class="action-button bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      <a href="deletebooking?id=<?php echo urlencode($booking['id']); ?>" 
+                         class="action-button bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
+                         onclick="return confirm('Are you sure you want to delete this booking?')">
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
                 <?php 

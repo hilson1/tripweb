@@ -39,41 +39,67 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_booking'])) {
             $user_row = $result->fetch_assoc();
             $user_id = $user_row['userid'];
         } else {
-            // User doesn't exist - create a guest user record
-            $user_id = 'guest_' . uniqid();
-            $guest_password = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT); // Random password
-            $status = 'guest';
-            
-            $insert_user_sql = "INSERT INTO users (userid, email, first_name, last_name, password, status, phone_number, address, country) 
-                               VALUES (?, ?, ?, '', ?, ?, ?, ?, ?)";
-            $user_stmt = $conn->prepare($insert_user_sql);
-            
-            // Split full name into first and last name
-            $name_parts = explode(' ', $full_name, 2);
-            $first_name = $name_parts[0];
-            $last_name = isset($name_parts[1]) ? $name_parts[1] : '';
-            
-            $user_stmt->bind_param("ssssssss", 
-                $user_id, 
-                $email, 
-                $first_name, 
-                $guest_password, 
-                $status, 
-                $phone_number, 
-                $address, 
-                $country
-            );
-            
-            if (!$user_stmt->execute()) {
-                echo "<script>alert('Error creating guest user: " . addslashes($user_stmt->error) . "');</script>";
-                $user_stmt->close();
-                $check_stmt->close();
-                exit;
-            }
-            $user_stmt->close();
-        }
-        $check_stmt->close();
+            // User doesn't exist - create a minimal guest user record
+        $user_id = 'guest_' . uniqid();
+        $guest_password = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+        $status = 'guest';
 
+        // Split full name into first and last name
+        $name_parts = explode(' ', $full_name, 2);
+        $first_name = trim($name_parts[0]);
+        $last_name = isset($name_parts[1]) ? trim($name_parts[1]) : '';
+
+        // Only insert required fields - let database handle defaults/NULLs for others
+        $insert_user_sql = "INSERT INTO users (
+            userid, 
+            email, 
+            first_name, 
+            last_name, 
+            password, 
+            status, 
+            phone_number, 
+            address, 
+            country,
+            profilepic,
+            user_name,
+            zip_postal_code,
+            reset_token,
+            reset_expires
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL)";
+
+        $user_stmt = $conn->prepare($insert_user_sql);
+
+        if (!$user_stmt) {
+            echo "<script>alert('Error preparing user insert: " . addslashes($conn->error) . "');</script>";
+            $check_stmt->close();
+            exit;
+        }
+
+        // Empty string fallback for optional fields
+        $phone_value = !empty($phone_number) ? $phone_number : NULL;
+        $address_value = !empty($address) ? $address : NULL;
+        $country_value = !empty($country) ? $country : NULL;
+
+        $user_stmt->bind_param("sssssssss", 
+            $user_id,
+            $email,
+            $first_name,
+            $last_name,
+            $guest_password,
+            $status,
+            $phone_value,
+            $address_value,
+            $country_value
+        );
+
+        if (!$user_stmt->execute()) {
+            echo "<script>alert('Error creating guest user: " . addslashes($user_stmt->error) . "');</script>";
+            $user_stmt->close();
+            $check_stmt->close();
+            exit;
+        }
+        $user_stmt->close();
+        }
         // Now insert the booking with the validated/created user_id
         $sql = "INSERT INTO trip_bookings (
             user_id, trip_id, trip_name, full_name, email, 
@@ -88,25 +114,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_booking'])) {
         }
 
         $stmt->bind_param(
-            "sisssssssiissssss",
-            $user_id,          // s - string
-            $trip_id,          // i - integer
-            $trip_name,        // s - string
-            $full_name,        // s - string
-            $email,            // s - string
-            $phone_number,     // s - string
-            $address,          // s - string
-            $city,             // s - string
-            $country,          // s - string
-            $adults,           // i - integer
-            $children,         // i - integer
-            $arrival_date,     // s - string (date)
-            $departure_date,   // s - string (date)
-            $airport_pickup,   // s - string (enum)
-            $message,          // s - string
-            $payment_mode,     // s - string
-            $payment_status,   // s - string
-            $start_date        // s - string (date)
+            "sissssssssiissssss", 
+            $user_id,          // s
+            $trip_id,          // i
+            $trip_name,        // s
+            $full_name,        // s
+            $email,            // s
+            $phone_number,     // s
+            $address,          // s
+            $city,             // s
+            $country,          // s
+            $adults,           // s
+            $children,         // i
+            $arrival_date,     // s
+            $departure_date,   // s
+            $airport_pickup,   // s
+            $message,          // s
+            $payment_mode,     // s
+            $payment_status,   // s
+            $start_date        // s
         );
 
         if ($stmt->execute()) {
@@ -206,8 +232,11 @@ if ($user_query && $user_query->num_rows > 0) {
     <div class="p-6 space-y-10">
 
       <!-- Booking Form -->
-      <div class="glass-effect rounded-2xl shadow-xl p-6 bg-white">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Create New Booking</h1>
+      <div class="gradient-bg rounded-2xl p-6 text-white">
+            <h1 class="text-3xl font-bold">
+              <i class="fas fa-calendar-plus  mr-3"></i>Add New Booking
+            </h1>
+        </div>
 
         <form method="post" onsubmit="return validateBookingForm(event)">
           <input type="hidden" name="create_booking" value="1">
